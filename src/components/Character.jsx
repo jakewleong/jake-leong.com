@@ -1,8 +1,14 @@
 // src/components/Character.jsx
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
+
+const CHARACTER_MODELS = [
+  '/models/jake01.glb',
+  '/models/jake02.glb',
+  // add more here later, e.g. '/models/jake03.glb',
+];
 
 /* ------------- TUNING KNOBS ------------- */
 
@@ -41,7 +47,14 @@ export default function Character({
   lowPower = false,
 }) {
   const group = useRef();
-  const { scene, animations } = useGLTF('/models/character.glb');
+
+  // 🔀 Pick a random character model once per mount
+  const [modelPath] = useState(() => {
+    const index = Math.floor(Math.random() * CHARACTER_MODELS.length);
+    return CHARACTER_MODELS[index];
+  });
+
+  const { scene, animations } = useGLTF(modelPath);
   const { actions, names } = useAnimations(animations, group);
 
   // Ensure all meshes cast shadows
@@ -85,7 +98,7 @@ export default function Character({
   // Pick animation clips and start idle right away
   useEffect(() => {
     if (!names || names.length === 0) {
-      console.warn('No animation clips found in character.glb');
+      console.warn('No animation clips found in', modelPath);
       return;
     }
 
@@ -105,7 +118,7 @@ export default function Character({
       idleAction.reset().play();
       currentAction.current = idleAction;
     }
-  }, [actions, names]);
+  }, [actions, names, modelPath]);
 
   useFrame((_, delta) => {
     if (!group.current) return;
@@ -189,4 +202,7 @@ export default function Character({
   );
 }
 
-useGLTF.preload('/models/character.glb');
+// Preload all possible Jake variants
+CHARACTER_MODELS.forEach((path) => {
+  useGLTF.preload(path);
+});

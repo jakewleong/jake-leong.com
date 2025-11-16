@@ -25,8 +25,14 @@ const artworks = [
     heading: 'Labrum London',
     subheading: '3D Artist / Animator',
     body: [
-      { text: 'AW25 Animation', url: 'https://www.instagram.com/p/DGYA8GYIflD/' },
-      { text: 'Africa Day Animation', url: 'https://www.instagram.com/p/DKuWungIQX_/' },
+      {
+        text: 'AW25 Animation',
+        url: 'https://www.instagram.com/p/DGYA8GYIflD/',
+      },
+      {
+        text: 'Africa Day Animation',
+        url: 'https://www.instagram.com/p/DKuWungIQX_/',
+      },
     ],
   },
   {
@@ -68,6 +74,9 @@ const MODULE_LENGTH = 19.5;
 // Scroll tuning
 const SCROLL_MULTIPLIER = 1;
 const DAMPING = 0.03;
+
+// IDs
+const TITLE_ID = 'title';
 
 // WIP slot is always one tile after your last artwork
 const FIRST_SLOT = artworks[0].slot;
@@ -124,19 +133,29 @@ export default function Gallery({
       {/* Extra background before first slot */}
       <BackgroundSlot index={FIRST_SLOT - 1} galleryScene={galleryScene} />
 
-      {/* Normal clickable artworks */}
-      {artworks.map((art, index) => (
-        <ArtSlot
-          key={art.id}
-          art={art}
-          galleryScene={galleryScene}
-          totalDistance={totalDistance}
-          onSelectArtwork={onSelectArtwork}
-          onScrollToArtworkOffset={onScrollToArtworkOffset}
-          selectedArtworkId={selectedArtworkId}
-          autoSelectOnMount={autoFocusFirst && index === 0}
-        />
-      ))}
+      {/* First artwork (title) is NON-clickable */}
+      {artworks.map((art, index) =>
+        art.id === TITLE_ID ? (
+          <StaticArtSlot
+            key={art.id}
+            art={art}
+            galleryScene={galleryScene}
+          />
+        ) : (
+          <ArtSlot
+            key={art.id}
+            art={art}
+            galleryScene={galleryScene}
+            totalDistance={totalDistance}
+            onSelectArtwork={onSelectArtwork}
+            onScrollToArtworkOffset={onScrollToArtworkOffset}
+            selectedArtworkId={selectedArtworkId}
+            // If you ever re-enable autoFocusFirst, we probably want
+            // the *first clickable* artwork (index > 0)
+            autoSelectOnMount={autoFocusFirst && index === 1}
+          />
+        )
+      )}
 
       {/* 🌱 Non-clickable “Work in progress” tile at the end */}
       <WorkInProgressSlot
@@ -160,6 +179,35 @@ function BackgroundSlot({ index, galleryScene }) {
   );
 }
 
+/**
+ * Static, non-clickable slot (used for the title model).
+ */
+function StaticArtSlot({ art, galleryScene }) {
+  const slotGroup = useRef();
+  const { scene: artScene } = useGLTF(art.model);
+
+  useEffect(() => {
+    artScene.traverse((obj) => {
+      if (obj.isMesh) {
+        // title: no floor shadow, no hover behaviour
+        obj.castShadow = false;
+        obj.receiveShadow = false;
+      }
+    });
+  }, [artScene]);
+
+  const slotPosition = [art.slot * MODULE_LENGTH, 0, 0];
+
+  return (
+    <group ref={slotGroup} position={slotPosition}>
+      <primitive object={galleryScene.clone()} />
+      <group position={[0, art.yOffset, 0.5]} scale={art.scale}>
+        <primitive object={artScene} />
+      </group>
+    </group>
+  );
+}
+
 function ArtSlot({
   art,
   galleryScene,
@@ -174,15 +222,13 @@ function ArtSlot({
 
   // Art meshes cast shadows
   useEffect(() => {
-  artScene.traverse((obj) => {
-    if (obj.isMesh) {
-      const isTitle = art.id === 'title';
-      obj.castShadow = !isTitle;  // 🔹 title: no shadow, others: yes
-      obj.receiveShadow = false;
-    }
-  });
-}, [artScene, art.id]);
-
+    artScene.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = false;
+      }
+    });
+  }, [artScene]);
 
   const slotPosition = [art.slot * MODULE_LENGTH, 0, 0];
 
@@ -286,7 +332,11 @@ function ClickableArtwork({
     box.getCenter(center);
     box.getSize(size);
 
-    if (Number.isFinite(size.x) && Number.isFinite(size.y) && Number.isFinite(size.z)) {
+    if (
+      Number.isFinite(size.x) &&
+      Number.isFinite(size.y) &&
+      Number.isFinite(size.z)
+    ) {
       const margin = 0.25; // extra padding around the model
       size.addScalar(margin);
       setHitBoxConfig({
@@ -397,7 +447,7 @@ function ClickableArtwork({
         <meshBasicMaterial
           transparent
           opacity={0}
-          depthWrite={false}  // 👈 don't occlude other objects or shadows
+          depthWrite={false} // don't occlude other objects or shadows
           depthTest={false}
         />
       </mesh>
