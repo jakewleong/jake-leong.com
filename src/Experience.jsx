@@ -58,7 +58,7 @@ export default function Experience({
     setCharacterTargetX(0);
   };
 
-  // 🔁 Watch for the moment when gallery & character are both in place
+  // Watch for the moment when gallery & character are both in place
   useEffect(() => {
     if (mode !== 'approach' || !selectedArtwork) return;
 
@@ -86,15 +86,15 @@ export default function Experience({
   }, [mode, selectedArtwork]);
 
   /**
-   * ▶️ Tell App which artwork is active for the overlay.
+   * Tell App which artwork is active for the overlay.
    * We only send data when we are *fully* in INSPECT mode.
    */
   useEffect(() => {
     if (typeof onArtworkChange !== 'function') return;
 
     if (mode === 'inspect' && selectedArtwork) {
-      const { heading, subheading, body } = selectedArtwork;
-      onArtworkChange({ heading, subheading, body });
+      // 🔹 CHANGED: send the full artwork object, including detailMedia
+      onArtworkChange(selectedArtwork);
     } else {
       onArtworkChange(null);
     }

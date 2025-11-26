@@ -1,9 +1,12 @@
 // src/App.jsx
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { ScrollControls, useProgress } from '@react-three/drei';
-import { useState, useEffect } from 'react';
+import { ScrollControls, useProgress, Preload } from '@react-three/drei';
+import { useState, useEffect, useRef } from 'react';
 import Experience from './Experience';
+import Lottie from 'lottie-react';
+import scrollThumbAnim from './animations/scroll-thumb.json';
+
 
 // Small helper: typewriter effect for one line of text
 function TypeLine({ text, speed = 25 }) {
@@ -36,6 +39,362 @@ function toLines(value) {
   return String(value).split('\n');
 }
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      setIsMobile(window.innerWidth <= breakpoint);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+/**
+ * Fullscreen overlay for media carousel
+ * - items: [{ type: 'image' | 'video', src, alt?, orientation? }]
+ */
+function MediaCarouselOverlay({ items, index, setIndex, onClose }) {
+  const dragState = useRef({
+    active: false,
+    startX: 0,
+  });
+
+  const isMobile = useIsMobile();
+
+  if (!items || items.length === 0) return null;
+
+  const current = items[index] || items[0];
+  const isVideo = current.type === 'video';
+  const orientation = current.orientation || 'landscape'; // default videos to landscape
+
+  const isPortraitVideo = isVideo && orientation === 'portrait';
+  const isLandscapeVideo = isVideo && orientation === 'landscape';
+
+  const goPrev = () => {
+    setIndex((prev) => (prev - 1 + items.length) % items.length);
+  };
+
+  const goNext = () => {
+    setIndex((prev) => (prev + 1) % items.length);
+  };
+
+  const getClientX = (e) => {
+    if (e.clientX != null) return e.clientX;
+    if (e.touches && e.touches[0]) return e.touches[0].clientX;
+    if (e.changedTouches && e.changedTouches[0])
+      return e.changedTouches[0].clientX;
+    return 0;
+  };
+
+  const handlePointerDown = (e) => {
+    dragState.current.active = true;
+    dragState.current.startX = getClientX(e);
+  };
+
+  const handlePointerMove = () => {
+    if (!dragState.current.active) return;
+  };
+
+  const handlePointerUp = (e) => {
+    if (!dragState.current.active) return;
+    const endX = getClientX(e);
+    const dx = endX - dragState.current.startX;
+    dragState.current.active = false;
+
+    const THRESHOLD = 40;
+    if (Math.abs(dx) > THRESHOLD) {
+      if (dx > 0) goPrev();
+      else goNext();
+    }
+  };
+
+  const handleOverlayClick = () => {
+    onClose();
+  };
+
+  const stopPropagation = (e) => {
+    e.stopPropagation();
+  };
+
+const maxMediaHeight = isMobile ? '70vh' : '80vh';
+
+  return (
+    <div
+      onClick={handleOverlayClick}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 50,
+        background: 'rgba(0, 0, 0, 0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center', // always center content
+        paddingTop: isMobile ? '6vh' : 0, // shift up a bit on mobile
+        paddingBottom: isMobile ? '10vh' : 0, // room for Safari bottom bar
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+      }}
+    >
+      {/* Inner content – clicking here should NOT close overlay */}
+      <div
+        onClick={stopPropagation}
+        style={{
+          width: isMobile ? '100vw' : 'min(90vw, 1000px)',
+          maxHeight: '90vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: isMobile ? 0 : 16,
+          padding: isMobile ? 0 : '0 12px',
+          position: 'relative',
+        }}
+      >
+        {/* Close button – plain white X */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          style={{
+            position: 'absolute',
+            top: isMobile ? 16 : -8,
+            left: isMobile ? 16 : -8,
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            border: 'none',
+            background: 'transparent',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 22,
+            lineHeight: 1,
+            zIndex: 2,
+          }}
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        {/* Left arrow (desktop only – side arrow) */}
+        {!isMobile && items.length > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goPrev();
+            }}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: '#fff',
+              fontSize: 28,
+              cursor: 'pointer',
+              padding: 8,
+            }}
+            aria-label="Previous"
+          >
+            ‹
+          </button>
+        )}
+
+        {/* Media – shared wrapper */}
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onTouchStart={(e) => handlePointerDown(e.nativeEvent)}
+          onTouchMove={(e) => handlePointerMove(e.nativeEvent)}
+          onTouchEnd={(e) => handlePointerUp(e.nativeEvent)}
+          style={{
+            position: 'relative',
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+  key={index}
+  style={{
+    // For media wrapper
+    width: isMobile
+      ? '100%'                                   // full width on mobile
+      : isVideo
+      ? 'min(100%, 960px)'                       // nice wide frame on desktop for video
+      : 'auto',
+    height: 'auto',
+    maxWidth: '100%',
+    maxHeight: maxMediaHeight,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    animation: 'carouselSlide 0.25s ease',
+    ...(isPortraitVideo
+      ? { aspectRatio: '9 / 16' }                // tall frame for vertical video
+      : isLandscapeVideo
+      ? { aspectRatio: '16 / 9' }                // wide frame for horizontal video
+      : {}),
+  }}
+>
+  {isVideo ? (
+    <iframe
+      title={current.alt || 'Video'}
+      src={current.src}
+      style={{
+        border: 'none',
+        width: '100%',
+        height: '100%',                          // fill the aspect-ratio box
+        display: 'block',
+        background: 'black',
+      }}
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowFullScreen
+    />
+  ) : (
+    <img
+      src={current.src}
+      alt={current.alt || ''}
+      style={{
+        width: 'auto',
+        height: 'auto',
+        maxWidth: '100%',
+        maxHeight: maxMediaHeight,
+        objectFit: 'contain',
+        display: 'block',
+      }}
+    />
+  )}
+</div>
+
+
+          {/* Overlay arrows on mobile */}
+          {isMobile && items.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goPrev();
+                }}
+                style={{
+                  position: 'absolute',
+                  left: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'rgba(0,0,0,0.45)',
+                  color: '#fff',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 999,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: 22,
+                }}
+                aria-label="Previous"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goNext();
+                }}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'rgba(0,0,0,0.45)',
+                  color: '#fff',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 999,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: 22,
+                }}
+                aria-label="Next"
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Right arrow (desktop only – side arrow) */}
+        {!isMobile && items.length > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goNext();
+            }}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: '#fff',
+              fontSize: 28,
+              cursor: 'pointer',
+              padding: 8,
+            }}
+            aria-label="Next"
+          >
+            ›
+          </button>
+        )}
+      </div>
+
+      {/* Dots underneath, centred */}
+      {items.length > 1 && (
+        <div
+          onClick={stopPropagation}
+          style={{
+            position: 'absolute',
+            bottom: '12vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            gap: 6,
+          }}
+        >
+          {items.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 999,
+                background:
+                  i === index ? '#fff' : 'rgba(255,255,255,0.4)',
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [activeArtwork, setActiveArtwork] = useState(null);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -45,11 +404,24 @@ export default function App() {
   const { progress } = useProgress();
   const [showLoader, setShowLoader] = useState(true);
 
+  // NEW: mobile scroll prompt overlay
+  const [showScrollOverlay, setShowScrollOverlay] = useState(false);
+  const isMobile = useIsMobile();
+
   // Small dropdown under hamburger
   const [menuOpen, setMenuOpen] = useState(false);
   // Full-screen overlay section: 'about' | 'contact' | null
   const [overlaySection, setOverlaySection] = useState(null);
   const overlayIsOpen = overlaySection !== null;
+
+  // Media carousel overlay
+  const [mediaOverlayOpen, setMediaOverlayOpen] = useState(false);
+  const [mediaIndex, setMediaIndex] = useState(0);
+
+  const activeHasMedia =
+    !!activeArtwork &&
+    Array.isArray(activeArtwork.detailMedia) &&
+    activeArtwork.detailMedia.length > 0;
 
   // When loading finishes, fade out loader
   useEffect(() => {
@@ -59,16 +431,32 @@ export default function App() {
     }
   }, [progress]);
 
-  // Floating hint disappears on first scroll/touch
+  // After loading finishes on mobile, show scroll prompt overlay
   useEffect(() => {
-    const handleScrollLike = () => setHasInteracted(true);
+    if (!isMobile) {
+      setShowScrollOverlay(false);
+      return;
+    }
+    if (!showLoader && progress === 100) {
+      setShowScrollOverlay(true);
+    }
+  }, [isMobile, showLoader, progress]);
+
+  // Floating hint + scroll overlay disappear on first scroll/touch
+  useEffect(() => {
+    const handleScrollLike = () => {
+      setHasInteracted(true);
+      setShowScrollOverlay(false);
+    };
 
     window.addEventListener('wheel', handleScrollLike, { passive: true });
     window.addEventListener('touchmove', handleScrollLike, { passive: true });
+    window.addEventListener('touchstart', handleScrollLike, { passive: true });
 
     return () => {
       window.removeEventListener('wheel', handleScrollLike);
       window.removeEventListener('touchmove', handleScrollLike);
+      window.removeEventListener('touchstart', handleScrollLike);
     };
   }, []);
 
@@ -78,29 +466,31 @@ export default function App() {
     const dpr = window.devicePixelRatio || 1;
     const saveData = navigator.connection?.saveData;
 
-    const guessLowPower =
-      saveData === true || cores <= 4 || dpr > 2.5;
+    const guessLowPower = saveData === true || cores <= 4 || dpr > 2.5;
 
     setIsLowPower(guessLowPower);
   }, []);
 
+  // Close media overlay when active artwork changes or About/Contact overlay opens
+  useEffect(() => {
+    setMediaOverlayOpen(false);
+    setMediaIndex(0);
+  }, [activeArtwork, overlayIsOpen]);
+
   // Toggle the hamburger / X icon
   const toggleHamburger = () => {
     if (overlayIsOpen) {
-      // If About/Contact is open, clicking the X closes overlay
-      // but keeps the dropdown visible.
       setOverlaySection(null);
       setMenuOpen(true);
     } else {
-      // Normal behaviour: toggle dropdown
       setMenuOpen((prev) => !prev);
     }
   };
 
   // Open About/Contact overlay from dropdown
   const openOverlay = (section) => {
-    setOverlaySection(section);  // 'about' | 'contact'
-    setMenuOpen(true);           // keep icon in X state
+    setOverlaySection(section); // 'about' | 'contact'
+    setMenuOpen(true);
   };
 
   const closeOverlay = () => {
@@ -113,12 +503,11 @@ export default function App() {
   return (
     <div
       style={{
-        position: 'fixed',
-    inset: 0,                 // top:0, right:0, bottom:0, left:0
-    width: '100vw',
-    height: '100dvh',         // dynamic viewport height (better on mobile)
-    background: '#111',
-    overflow: 'hidden',
+        width: '100vw',
+        height: '100vh',
+        background: '#111',
+        overflow: 'hidden',
+        position: 'relative',
       }}
     >
       {/* ================================
@@ -126,43 +515,39 @@ export default function App() {
          ================================ */}
       {showLoader && (
         <div
-              style={{
-      position: 'absolute',
-      inset: 0,
-      // 🔹 frosted white veil instead of dark
-      background: 'rgba(255, 255, 255, 1)',
-      backdropFilter: 'blur(22px) saturate(1.4)',
-      WebkitBackdropFilter: 'blur(22px) saturate(1.4)',
-      // subtle inner border for that glassy edge
-      boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.06)',
-      zIndex: 999,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#fff',
-      fontFamily:
-        'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-      transition: 'opacity 0.5s ease',
-      opacity: progress === 100 ? 0 : 1,
-      pointerEvents: 'auto',
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(255, 255, 255, 1)',
+            backdropFilter: 'blur(22px) saturate(1.4)',
+            WebkitBackdropFilter: 'blur(22px) saturate(1.4)',
+            boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.06)',
+            zIndex: 999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontFamily:
+              'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+            transition: 'opacity 0.5s ease',
+            opacity: progress === 100 ? 0 : 1,
+            pointerEvents: 'auto',
           }}
         >
-          {/* Walking silhouette (swap for your GIF <img> if you like) */}
           <img
-  src="/loading-walk.gif"
-  alt="loading"
-  style={{
-    width: 'clamp(80px, 15vw, 140px)',
-    height: 'auto',
-    marginBottom: '20px',
-    animation: 'walkerBob 1.2s ease-in-out infinite',
-    pointerEvents: 'none',
-    userSelect: 'none',
-  }}
-/>
+            src="/loading-walk.gif"
+            alt="loading"
+            style={{
+              width: 'clamp(80px, 15vw, 140px)',
+              height: 'auto',
+              marginBottom: '20px',
+              animation: 'walkerBob 1.2s ease-in-out infinite',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          />
 
-          {/* Progress bar */}
           <div
             style={{
               width: 'min(60vw, 220px)',
@@ -183,7 +568,6 @@ export default function App() {
             />
           </div>
 
-          {/* Percentage */}
           <div
             style={{
               marginTop: '10px',
@@ -197,6 +581,67 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* ================================
+          MOBILE SCROLL PROMPT OVERLAY
+         ================================ */}
+      {isMobile && !showLoader && !overlayIsOpen && showScrollOverlay && (
+ <div
+    style={{
+      position: 'absolute',
+      inset: 0,
+      zIndex: 80,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(10, 10, 10, 0.32)',
+      backdropFilter: 'blur(18px) saturate(1.3)',
+      WebkitBackdropFilter: 'blur(18px) saturate(1.3)',
+      pointerEvents: 'none', // let scroll pass through
+    }}
+  >
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        maxWidth: '260px',
+        gap: 16,
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}
+    >
+      {/* Centered Lottie finger */}
+      <Lottie
+        animationData={scrollThumbAnim}
+        loop
+        autoplay
+        style={{
+          width: 220,      // make it nice and big
+          height: 'auto',
+        }}
+      />
+
+      {/* White text, same font as rest of UI */}
+      <p
+        style={{
+          margin: 0,
+          color: '#fff',
+          fontSize: 16,
+          letterSpacing: '0.12em',
+          textAlign: 'center',
+          fontFamily:
+            'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+          opacity: 0.95,
+        }}
+      >
+        Scroll to view gallery
+      </p>
+    </div>
+  </div>
+)}
 
       {/* ================================
           HAMBURGER / X ICON (NO BG)
@@ -281,7 +726,7 @@ export default function App() {
               style={{
                 marginTop: 8,
                 padding: 0,
-                color: '#000', // black text, no background box
+                color: '#000',
                 fontFamily:
                   'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
                 fontSize: 22,
@@ -473,6 +918,18 @@ export default function App() {
         </div>
       )}
 
+      {/* ================================
+          MEDIA CAROUSEL OVERLAY
+         ================================ */}
+      {mediaOverlayOpen && activeHasMedia && !showLoader && (
+        <MediaCarouselOverlay
+          items={activeArtwork.detailMedia}
+          index={mediaIndex}
+          setIndex={setMediaIndex}
+          onClose={() => setMediaOverlayOpen(false)}
+        />
+      )}
+
       {/* Floating hint (only when not loading, no overlay, and before first scroll) */}
       {!hasInteracted && !showLoader && !overlayIsOpen && (
         <div
@@ -586,6 +1043,37 @@ export default function App() {
               </p>
             );
           })}
+
+          {/* View work button (opens carousel) */}
+          {activeHasMedia && (
+            <div
+              style={{
+                marginTop: 16,
+                pointerEvents: 'auto',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setMediaIndex(0);
+                  setMediaOverlayOpen(true);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 999,
+                  border: '1px solid #000',
+                  background: '#000',
+                  color: '#fff',
+                  fontSize: 'clamp(12px, 1.8vw, 16px)',
+                  cursor: 'pointer',
+                  fontFamily:
+                    'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+                }}
+              >
+                View work
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -600,31 +1088,42 @@ export default function App() {
         }}
         style={{ width: '100%', height: '100%', display: 'block' }}
       >
-        <ScrollControls pages={5} damping={0.15}>
+        <ScrollControls pages={8} damping={0.15}>
           <Experience
             onArtworkChange={setActiveArtwork}
             autoFocusFirst={false}
             isLowPower={isLowPower}
           />
+           <Preload all />
         </ScrollControls>
       </Canvas>
-
 
       {/* CSS keyframes */}
       <style>
         {`
-          @keyframes scrollHintPulse {
-            0%   { opacity: 0; transform: translate(-50%, 4px); }
-            25%  { opacity: 1; transform: translate(-50%, 0); }
-            75%  { opacity: 1; transform: translate(-50%, -4px); }
-            100% { opacity: 0; transform: translate(-50%, 0); }
-          }
+    @keyframes scrollHintPulse {
+      0%   { opacity: 0; transform: translate(-50%, 4px); }
+      25%  { opacity: 1; transform: translate(-50%, 0); }
+      75%  { opacity: 1; transform: translate(-50%, -4px); }
+      100% { opacity: 0; transform: translate(-50%, 0); }
+    }
 
-          @keyframes walkerBob {
-            0%   { transform: translateY(3px); opacity: 0.8; }
-            50%  { transform: translateY(-3px); opacity: 1; }
-            100% { transform: translateY(3px); opacity: 0.8; }
-          }
+    @keyframes walkerBob {
+      0%   { transform: translateY(3px); opacity: 0.8; }
+      50%  { transform: translateY(-3px); opacity: 1; }
+      100% { transform: translateY(3px); opacity: 0.8; }
+    }
+
+    @keyframes carouselSlide {
+      0% {
+        opacity: 0;
+        transform: translateX(12px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
         `}
       </style>
     </div>

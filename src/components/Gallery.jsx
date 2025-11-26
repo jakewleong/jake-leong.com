@@ -16,26 +16,36 @@ const artworks = [
       { text: 'Instagram', url: 'https://www.instagram.com/jake__leong/' },
     ],
   },
-  {
-    id: 'Labrum_Nomoli',
+
+{
+    id: 'Self',
     slot: 1,
-    model: '/models/art/Labrum_Nomoli.glb',
+    model: '/models/art/self.glb',
     scale: 1,
     yOffset: 0,
-    heading: 'Labrum London',
-    subheading: '3D Artist / Animator',
-    body: [
+    heading: 'Self',
+    subheading: 'Central Saint Martins - Final Major Project',
+    // 🔹 New: media items for the carousel
+    detailMedia: [
       {
-        text: 'AW25 Animation',
-        url: 'https://www.instagram.com/p/DGYA8GYIflD/',
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54939076794_7808774e96_b.jpg',
+        alt: 'Self 1',
       },
       {
-        text: 'Africa Day Animation',
-        url: 'https://www.instagram.com/p/DKuWungIQX_/',
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54939026078_31a3af5fb3_b.jpg',
+        alt: 'Self 2',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54938821066_a0a35481df_b.jpg',
+        alt: 'Self 3',
       },
     ],
   },
-  {
+
+    {
     id: 'mowalola',
     slot: 2,
     model: '/models/art/mowalola.glb',
@@ -43,28 +53,138 @@ const artworks = [
     yOffset: 0,
     heading: 'Mowalola Video',
     subheading: '3D Artist / Art direction',
-    body: 'Links to view work',
+    
+    detailMedia: [
+      {
+        type: 'video',
+        src: 'https://player.vimeo.com/video/1139654652?h=f562178756',
+        alt: 'Mowalola 1',
+        orientation: 'portrait',
+      },
+      {
+        type: 'video',
+        src: 'https://player.vimeo.com/video/1140600365?h=e1554e4e98',
+        alt: 'Mowalola 2',
+        orientation: 'portrait',
+      },
+    ],
   },
+
   {
-    id: 'distortedRealities01',
+    id: 'distortedRealities',
     slot: 3,
     model: '/models/art/distortedRealities01.glb',
     scale: 1,
     yOffset: 0,
-    heading: 'Distorted Realities #1',
+    heading: 'Distorted Realities',
     subheading: 'Central Saint Martins - MA Final Project',
-    body: 'Link to video',
+    
+    detailMedia: [
+      {
+        type: 'video',
+        src: 'https://player.vimeo.com/video/1140604422?h=3b5451ab9b',
+        alt: 'Distorted Realities Video',
+        orientation: 'landscape'
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54938821111_f9b8b538a5_b.jpg',
+        alt: 'Distorted Realities 1',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54939076864_0d39648378_b.jpg',
+        alt: 'Distorted Realities 2',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54937942752_bbc1279349_b.jpg',
+        alt: 'Distorted Realities 3',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54939026023_ccac085d7b_b.jpg',
+        alt: 'Distorted Realities 4',
+      },
+    ],
   },
+
   {
-    id: 'distortedRealities02',
+    id: 'NYC - Honor Saint Williams',
     slot: 4,
-    model: '/models/art/distortedRealities02.glb',
+    model: '/models/art/Cas-NYC.glb',
     scale: 1,
     yOffset: 0,
-    heading: 'Distorted Realities #2',
-    subheading: 'Central Saint Martins - MA Final Project',
-    body: 'Link to video',
+    heading: 'honor saint williams - nyc',
+    subheading: 'Music Video / Direction and animation',
+    detailMedia: [
+      {
+        type: 'video',
+        src: 'https://www.youtube.com/embed/HYxDnVBtAfE?si=uSllDaEvzZup8YNo',
+        alt: 'honor saint williams - nyc',
+        orientation: 'landscape',
+      },
+    ],
   },
+
+  {
+    id: 'Elijah Aike',
+    slot: 5,
+    model: '/models/art/whiterobe.glb',
+    scale: 1,
+    yOffset: 0,
+    heading: 'Elijah Aike',
+    subheading: 'Animation and cover art',
+    detailMedia: [
+      {
+        type: 'video',
+        src: 'https://www.youtube.com/embed/PvaokeJYT_k?si=bfsFJinNedvwDMjj',
+        alt: 'Sunday freestyle video',
+        orientation: 'landscape',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54947000586_853a7cce6f_b.jpg',
+        alt: 'White Robe',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54947305810_c576d7b22c_b.jpg',
+        alt: 'End of Life',
+      },
+    ],
+  },
+
+  {
+    id: 'Labrum_Nomoli',
+    slot: 6,
+    model: '/models/art/Labrum_Nomoli.glb',
+    scale: 1,
+    yOffset: 0,
+    heading: 'Labrum London',
+    subheading: '3D Artist / Animator',
+    // 🔹 New: media items for the carousel
+    detailMedia: [
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54938821066_a0a35481df_b.jpg',
+        alt: 'Labrum still 1',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54939079082_91f246f2bb_b.jpg',
+        alt: 'Labrum still 2',
+      },
+      {
+        // Vimeo EMBED URL
+        type: 'video',
+        src: 'https://www.instagram.com/p/DKuWungIQX_/embed',
+        alt: 'Labrum reel',
+        orientation: 'portrait',
+      },
+    ],
+  },
+  
 ];
 
 // 👉 Non-clickable WIP slot
@@ -73,7 +193,13 @@ const MODULE_LENGTH = 19.5;
 
 // Scroll tuning
 const SCROLL_MULTIPLIER = 1;
-const DAMPING = 0.03;
+
+// Desktop vs mobile damping
+const DESKTOP_DAMPING = 0.03; // original value
+const MOBILE_DAMPING = 0.7;  // slightly snappier on mobile; tweak to taste
+
+const isMobileWidth = () =>
+  typeof window !== 'undefined' && window.innerWidth <= 768;
 
 // IDs
 const TITLE_ID = 'title';
@@ -111,10 +237,12 @@ export default function Gallery({
   useFrame(() => {
     const targetScroll = scroll.offset;
 
+    const damping = isMobileWidth() ? MOBILE_DAMPING : DESKTOP_DAMPING;
+
     smoothScroll.current = THREE.MathUtils.lerp(
       smoothScroll.current,
       targetScroll,
-      DAMPING
+      damping
     );
 
     if (galleryOffsetRef) {
@@ -248,6 +376,7 @@ function ArtSlot({
         heading={art.heading}
         subheading={art.subheading}
         body={art.body}
+        detailMedia={art.detailMedia} // 🔹 new
         autoSelectOnMount={autoSelectOnMount}
       />
     </group>
@@ -300,6 +429,7 @@ function ClickableArtwork({
   heading,
   subheading,
   body,
+  detailMedia,
   autoSelectOnMount = false,
 }) {
   const artGroup = useRef();
@@ -307,15 +437,14 @@ function ClickableArtwork({
   const originalMaterialsRef = useRef([]);
   const hasAutoSelectedRef = useRef(false);
 
-  // Config for the invisible hit box (computed from model bounds)
-  const [hitBoxConfig, setHitBoxConfig] = useState({
-    center: [0, 1, 0],
-    size: [2, 2, 2],
-  });
+  // 🔐 Fixed, non-overlapping hit box per artwork
+  // Modules are ~19.5 units apart, so a 3–4 unit wide box is very safe.
+  const hitBoxCenter = [0, 1.5, 0];      // roughly chest-height
+  const hitBoxSize = [3.5, 4, 3.5];      // width, height, depth
 
   const position = [0, yOffset, 0.5];
 
-  // Save original materials + compute bounding box
+  // Save original materials once
   useEffect(() => {
     const originals = [];
     artScene.traverse((obj) => {
@@ -325,25 +454,12 @@ function ClickableArtwork({
     });
     originalMaterialsRef.current = originals;
 
-    // Compute bounding box of the model for consistent hit area
-    const box = new THREE.Box3().setFromObject(artScene);
-    const center = new THREE.Vector3();
-    const size = new THREE.Vector3();
-    box.getCenter(center);
-    box.getSize(size);
-
-    if (
-      Number.isFinite(size.x) &&
-      Number.isFinite(size.y) &&
-      Number.isFinite(size.z)
-    ) {
-      const margin = 0.25; // extra padding around the model
-      size.addScalar(margin);
-      setHitBoxConfig({
-        center: [center.x, center.y, center.z],
-        size: [size.x, size.y, size.z],
+    return () => {
+      // restore originals on unmount
+      originals.forEach(({ mesh, material }) => {
+        mesh.material = material;
       });
-    }
+    };
   }, [artScene]);
 
   // Hover effect + cursor (color only, no opacity changes)
@@ -356,7 +472,6 @@ function ClickableArtwork({
 
       originals.forEach(({ mesh, material }) => {
         const hoverMat = material.clone();
-        // Slight blue tint but keep original opacity/transparent flags
         const blue = new THREE.Color(0x7fbfff);
         if (hoverMat.color) {
           hoverMat.color.lerp(blue, 0.35);
@@ -404,6 +519,7 @@ function ClickableArtwork({
       heading,
       subheading,
       body,
+      detailMedia,
     });
   };
 
@@ -437,17 +553,17 @@ function ClickableArtwork({
         setHovered(false);
       }}
     >
-      {/* 🔍 Invisible hit box based on model bounds */}
+      {/* Invisible, fixed-size hit box – same for every artwork */}
       <mesh
-        position={hitBoxConfig.center}
+        position={hitBoxCenter}
         castShadow={false}
         receiveShadow={false}
       >
-        <boxGeometry args={hitBoxConfig.size} />
+        <boxGeometry args={hitBoxSize} />
         <meshBasicMaterial
           transparent
           opacity={0}
-          depthWrite={false} // don't occlude other objects or shadows
+          depthWrite={false}
           depthTest={false}
         />
       </mesh>
@@ -457,6 +573,7 @@ function ClickableArtwork({
     </group>
   );
 }
+
 
 // Preload models
 useGLTF.preload('/models/gallery_base.glb');
