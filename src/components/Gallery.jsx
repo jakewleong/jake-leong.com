@@ -1,7 +1,7 @@
 // src/components/Gallery.jsx
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 
 // 👇 Your artwork models + UI text
@@ -166,20 +166,15 @@ const artworks = [
     // 🔹 New: media items for the carousel
     detailMedia: [
       {
-        type: 'image',
-        src: 'https://live.staticflickr.com/65535/54938821066_a0a35481df_b.jpg',
-        alt: 'Labrum still 1',
-      },
-      {
-        type: 'image',
-        src: 'https://live.staticflickr.com/65535/54939079082_91f246f2bb_b.jpg',
-        alt: 'Labrum still 2',
-      },
-      {
-        // Vimeo EMBED URL
         type: 'video',
-        src: 'https://www.instagram.com/p/DKuWungIQX_/embed',
+        src: 'https://player.vimeo.com/video/1141675551?h=0822cc864f',
         alt: 'Labrum reel',
+        orientation: 'portrait',
+      },
+      {
+        type: 'video',
+        src: 'https://player.vimeo.com/video/1141706610?h=104397a7ef',
+        alt: 'Shoe construction',
         orientation: 'portrait',
       },
     ],
@@ -287,10 +282,15 @@ export default function Gallery({
 
       {/* 🌱 Non-clickable “Work in progress” tile at the end */}
       <WorkInProgressSlot
-        slot={WIP_SLOT}
-        model={WIP_MODEL}
-        galleryScene={galleryScene}
-      />
+  slot={WIP_SLOT}
+  model={WIP_MODEL}
+  galleryScene={galleryScene}
+  totalDistance={totalDistance}
+  onSelectArtwork={onSelectArtwork}
+  onScrollToArtworkOffset={onScrollToArtworkOffset}
+  selectedArtworkId={selectedArtworkId}
+/>
+
 
       {/* Extra background after WIP */}
       <BackgroundSlot index={LAST_SLOT + 1} galleryScene={galleryScene} />
@@ -387,10 +387,22 @@ function ArtSlot({
  * Non-interactive “work in progress” tile.
  * No hover, no click, just a small hint at future work.
  */
-function WorkInProgressSlot({ slot, model, galleryScene }) {
+function WorkInProgressSlot({
+  slot,
+  model,
+  galleryScene,
+  totalDistance,
+  onSelectArtwork,
+  onScrollToArtworkOffset,
+  selectedArtworkId,
+}) {
   const slotGroup = useRef();
-  const { scene: wipScene } = useGLTF(model);
 
+  // ⬇️ get scene + animations from the GLB
+  const { scene: wipScene, animations } = useGLTF(model);
+  const { actions, names } = useAnimations(animations, wipScene);
+
+  // Shadows as before
   useEffect(() => {
     wipScene.traverse((obj) => {
       if (obj.isMesh) {
@@ -400,17 +412,47 @@ function WorkInProgressSlot({ slot, model, galleryScene }) {
     });
   }, [wipScene]);
 
+  // ⬇️ play the first animation clip on loop
+  useEffect(() => {
+    if (!actions || !names || names.length === 0) return;
+
+    // if you have a specific name like 'WIP_Loop', you can search for it here
+    const clipName = names[0];
+    const action = actions[clipName];
+    if (!action) return;
+
+    action.reset().play();
+    action.loop = THREE.LoopRepeat;
+    action.clampWhenFinished = false;
+
+    return () => action.stop();
+  }, [actions, names]);
+
   const slotPosition = [slot * MODULE_LENGTH, 0, 0];
 
   return (
     <group ref={slotGroup} position={slotPosition}>
       <primitive object={galleryScene.clone()} />
-      <group position={[0, 0, 0.5]} scale={0.7}>
-        <primitive object={wipScene} />
-      </group>
+
+      <ClickableArtwork
+        id="wip"
+        artScene={wipScene}
+        scale={0.7}
+        yOffset={0}
+        slot={slot}
+        totalDistance={totalDistance}
+        onSelectArtwork={onSelectArtwork}
+        onScrollToArtworkOffset={onScrollToArtworkOffset}
+        selectedArtworkId={selectedArtworkId}
+        heading="More work coming soon"
+        subheading=""
+        body={null}
+        detailMedia={[]}
+      />
     </group>
   );
 }
+
 
 /**
  * Fully interactive artwork with a larger invisible hit-area,

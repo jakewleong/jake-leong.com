@@ -1,25 +1,27 @@
 // src/App.jsx
-import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
-import { ScrollControls, useProgress, Preload } from '@react-three/drei';
-import { useState, useEffect, useRef } from 'react';
-import Experience from './Experience';
-import Lottie from 'lottie-react';
-import scrollThumbAnim from './animations/scroll-thumb.json';
+import * as THREE from "three";
+import { Canvas } from "@react-three/fiber";
+import { ScrollControls, useProgress, Preload } from "@react-three/drei";
+import { useState, useEffect, useRef } from "react";
+import Experience from "./Experience";
+import Lottie from "lottie-react";
+import scrollThumbAnim from "./animations/scroll-thumb.json";
+import desktopScrollAnim from "./animations/scroll-desktop.json";
+import loadingAnim from "./animations/loading-walk.json";
 
 
 // Small helper: typewriter effect for one line of text
 function TypeLine({ text, speed = 25 }) {
-  const [shown, setShown] = useState('');
+  const [shown, setShown] = useState("");
 
   useEffect(() => {
     if (!text) {
-      setShown('');
+      setShown("");
       return;
     }
 
     let i = 0;
-    setShown('');
+    setShown("");
     const id = setInterval(() => {
       i += 1;
       setShown(text.slice(0, i));
@@ -36,22 +38,22 @@ function TypeLine({ text, speed = 25 }) {
 function toLines(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
-  return String(value).split('\n');
+  return String(value).split("\n");
 }
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
   );
 
   useEffect(() => {
     const handleResize = () => {
-      if (typeof window === 'undefined') return;
+      if (typeof window === "undefined") return;
       setIsMobile(window.innerWidth <= breakpoint);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [breakpoint]);
 
   return isMobile;
@@ -72,11 +74,11 @@ function MediaCarouselOverlay({ items, index, setIndex, onClose }) {
   if (!items || items.length === 0) return null;
 
   const current = items[index] || items[0];
-  const isVideo = current.type === 'video';
-  const orientation = current.orientation || 'landscape'; // default videos to landscape
+  const isVideo = current.type === "video";
+  const orientation = current.orientation || "landscape";
 
-  const isPortraitVideo = isVideo && orientation === 'portrait';
-  const isLandscapeVideo = isVideo && orientation === 'landscape';
+  const isPortraitVideo = isVideo && orientation === "portrait";
+  const isLandscapeVideo = isVideo && orientation === "landscape";
 
   const goPrev = () => {
     setIndex((prev) => (prev - 1 + items.length) % items.length);
@@ -124,37 +126,37 @@ function MediaCarouselOverlay({ items, index, setIndex, onClose }) {
     e.stopPropagation();
   };
 
-const maxMediaHeight = isMobile ? '70vh' : '80vh';
+  const maxMediaHeight = isMobile ? "70vh" : "80vh";
 
   return (
     <div
       onClick={handleOverlayClick}
       style={{
-        position: 'absolute',
+        position: "absolute",
         inset: 0,
         zIndex: 50,
-        background: 'rgba(0, 0, 0, 0.6)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center', // always center content
-        paddingTop: isMobile ? '6vh' : 0, // shift up a bit on mobile
-        paddingBottom: isMobile ? '10vh' : 0, // room for Safari bottom bar
+        background: "rgba(0, 0, 0, 0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingTop: isMobile ? "6vh" : 0,
+        paddingBottom: isMobile ? "10vh" : 0,
         fontFamily:
-          'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+          "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
       {/* Inner content – clicking here should NOT close overlay */}
       <div
         onClick={stopPropagation}
         style={{
-          width: isMobile ? '100vw' : 'min(90vw, 1000px)',
-          maxHeight: '90vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: isMobile ? "100vw" : "min(90vw, 1000px)",
+          maxHeight: "90vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           gap: isMobile ? 0 : 16,
-          padding: isMobile ? 0 : '0 12px',
-          position: 'relative',
+          padding: isMobile ? 0 : "0 12px",
+          position: "relative",
         }}
       >
         {/* Close button – plain white X */}
@@ -165,19 +167,19 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
             onClose();
           }}
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: isMobile ? 16 : -8,
             left: isMobile ? 16 : -8,
             width: 36,
             height: 36,
             borderRadius: 999,
-            border: 'none',
-            background: 'transparent',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            border: "none",
+            background: "transparent",
+            color: "#fff",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             fontSize: 22,
             lineHeight: 1,
             zIndex: 2,
@@ -196,11 +198,11 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
               goPrev();
             }}
             style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#fff',
+              border: "none",
+              background: "transparent",
+              color: "#fff",
               fontSize: 28,
-              cursor: 'pointer',
+              cursor: "pointer",
               padding: 8,
             }}
             aria-label="Previous"
@@ -219,66 +221,64 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
           onTouchMove={(e) => handlePointerMove(e.nativeEvent)}
           onTouchEnd={(e) => handlePointerUp(e.nativeEvent)}
           style={{
-            position: 'relative',
+            position: "relative",
             flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <div
-  key={index}
-  style={{
-    // For media wrapper
-    width: isMobile
-      ? '100%'                                   // full width on mobile
-      : isVideo
-      ? 'min(100%, 960px)'                       // nice wide frame on desktop for video
-      : 'auto',
-    height: 'auto',
-    maxWidth: '100%',
-    maxHeight: maxMediaHeight,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    animation: 'carouselSlide 0.25s ease',
-    ...(isPortraitVideo
-      ? { aspectRatio: '9 / 16' }                // tall frame for vertical video
-      : isLandscapeVideo
-      ? { aspectRatio: '16 / 9' }                // wide frame for horizontal video
-      : {}),
-  }}
->
-  {isVideo ? (
-    <iframe
-      title={current.alt || 'Video'}
-      src={current.src}
-      style={{
-        border: 'none',
-        width: '100%',
-        height: '100%',                          // fill the aspect-ratio box
-        display: 'block',
-        background: 'black',
-      }}
-      allow="autoplay; fullscreen; picture-in-picture"
-      allowFullScreen
-    />
-  ) : (
-    <img
-      src={current.src}
-      alt={current.alt || ''}
-      style={{
-        width: 'auto',
-        height: 'auto',
-        maxWidth: '100%',
-        maxHeight: maxMediaHeight,
-        objectFit: 'contain',
-        display: 'block',
-      }}
-    />
-  )}
-</div>
-
+            key={index}
+            style={{
+              width: isMobile
+                ? "100%"
+                : isVideo
+                ? "min(100%, 960px)"
+                : "auto",
+              height: "auto",
+              maxWidth: "100%",
+              maxHeight: maxMediaHeight,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "carouselSlide 0.25s ease",
+              ...(isPortraitVideo
+                ? { aspectRatio: "9 / 16" }
+                : isLandscapeVideo
+                ? { aspectRatio: "16 / 9" }
+                : {}),
+            }}
+          >
+            {isVideo ? (
+              <iframe
+                title={current.alt || "Video"}
+                src={current.src}
+                style={{
+                  border: "none",
+                  width: "100%",
+                  height: "100%",
+                  display: "block",
+                  background: "black",
+                }}
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <img
+                src={current.src}
+                alt={current.alt || ""}
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "100%",
+                  maxHeight: maxMediaHeight,
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            )}
+          </div>
 
           {/* Overlay arrows on mobile */}
           {isMobile && items.length > 1 && (
@@ -290,20 +290,20 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
                   goPrev();
                 }}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   left: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  border: 'none',
-                  background: 'rgba(0,0,0,0.45)',
-                  color: '#fff',
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none",
+                  background: "rgba(0,0,0,0.45)",
+                  color: "#fff",
                   width: 32,
                   height: 32,
                   borderRadius: 999,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
                   fontSize: 22,
                 }}
                 aria-label="Previous"
@@ -317,20 +317,20 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
                   goNext();
                 }}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  border: 'none',
-                  background: 'rgba(0,0,0,0.45)',
-                  color: '#fff',
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none",
+                  background: "rgba(0,0,0,0.45)",
+                  color: "#fff",
                   width: 32,
                   height: 32,
                   borderRadius: 999,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
                   fontSize: 22,
                 }}
                 aria-label="Next"
@@ -350,11 +350,11 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
               goNext();
             }}
             style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#fff',
+              border: "none",
+              background: "transparent",
+              color: "#fff",
               fontSize: 28,
-              cursor: 'pointer',
+              cursor: "pointer",
               padding: 8,
             }}
             aria-label="Next"
@@ -369,11 +369,11 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
         <div
           onClick={stopPropagation}
           style={{
-            position: 'absolute',
-            bottom: '12vh',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
+            position: "absolute",
+            bottom: "12vh",
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
             gap: 6,
           }}
         >
@@ -385,7 +385,7 @@ const maxMediaHeight = isMobile ? '70vh' : '80vh';
                 height: 6,
                 borderRadius: 999,
                 background:
-                  i === index ? '#fff' : 'rgba(255,255,255,0.4)',
+                  i === index ? "#fff" : "rgba(255,255,255,0.4)",
               }}
             />
           ))}
@@ -400,17 +400,17 @@ export default function App() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isLowPower, setIsLowPower] = useState(false);
 
-  // drei loading progress
   const { progress } = useProgress();
   const [showLoader, setShowLoader] = useState(true);
 
-  // NEW: mobile scroll prompt overlay
-  const [showScrollOverlay, setShowScrollOverlay] = useState(false);
+  // Scroll prompt overlay (both mobile + desktop now)
+  const [scrollOverlayVisible, setScrollOverlayVisible] = useState(false);
+  const [scrollOverlayDismissed, setScrollOverlayDismissed] = useState(false);
+
   const isMobile = useIsMobile();
 
-  // Small dropdown under hamburger
+  // Hamburger / overlays
   const [menuOpen, setMenuOpen] = useState(false);
-  // Full-screen overlay section: 'about' | 'contact' | null
   const [overlaySection, setOverlaySection] = useState(null);
   const overlayIsOpen = overlaySection !== null;
 
@@ -418,12 +418,15 @@ export default function App() {
   const [mediaOverlayOpen, setMediaOverlayOpen] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
 
+  // Has the user clicked any artwork this session?
+  const [hasTappedArtwork, setHasTappedArtwork] = useState(false);
+
   const activeHasMedia =
     !!activeArtwork &&
     Array.isArray(activeArtwork.detailMedia) &&
     activeArtwork.detailMedia.length > 0;
 
-  // When loading finishes, fade out loader
+  // Loader fade-out
   useEffect(() => {
     if (progress === 100) {
       const t = setTimeout(() => setShowLoader(false), 400);
@@ -431,34 +434,49 @@ export default function App() {
     }
   }, [progress]);
 
-  // After loading finishes on mobile, show scroll prompt overlay
+  // Show scroll prompt overlay once loading is done (both mobile & desktop)
   useEffect(() => {
-    if (!isMobile) {
-      setShowScrollOverlay(false);
-      return;
+    if (progress === 100) {
+      setScrollOverlayVisible(true);
+      setScrollOverlayDismissed(false);
     }
-    if (!showLoader && progress === 100) {
-      setShowScrollOverlay(true);
-    }
-  }, [isMobile, showLoader, progress]);
+  }, [progress]);
 
-  // Floating hint + scroll overlay disappear on first scroll/touch
+  // Dismiss scroll overlay on ANY scroll / swipe
   useEffect(() => {
-    const handleScrollLike = () => {
+    const dismissOverlay = () => {
+      if (scrollOverlayDismissed) return;
       setHasInteracted(true);
-      setShowScrollOverlay(false);
+      setScrollOverlayDismissed(true);
     };
 
-    window.addEventListener('wheel', handleScrollLike, { passive: true });
-    window.addEventListener('touchmove', handleScrollLike, { passive: true });
-    window.addEventListener('touchstart', handleScrollLike, { passive: true });
+    const handleWheel = () => {
+      dismissOverlay();
+    };
+
+    const handleTouchMove = () => {
+      dismissOverlay();
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
 
     return () => {
-      window.removeEventListener('wheel', handleScrollLike);
-      window.removeEventListener('touchmove', handleScrollLike);
-      window.removeEventListener('touchstart', handleScrollLike);
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchmove", handleTouchMove);
     };
-  }, []);
+  }, [scrollOverlayDismissed]);
+
+  // After swipe-up animation finishes, unmount scroll overlay
+  useEffect(() => {
+    if (!scrollOverlayDismissed) return;
+
+    const t = setTimeout(() => {
+      setScrollOverlayVisible(false);
+    }, 450);
+
+    return () => clearTimeout(t);
+  }, [scrollOverlayDismissed]);
 
   // Low-power heuristic
   useEffect(() => {
@@ -471,13 +489,12 @@ export default function App() {
     setIsLowPower(guessLowPower);
   }, []);
 
-  // Close media overlay when active artwork changes or About/Contact overlay opens
+  // Close media overlay when artwork changes or About/Contact opens
   useEffect(() => {
     setMediaOverlayOpen(false);
     setMediaIndex(0);
   }, [activeArtwork, overlayIsOpen]);
 
-  // Toggle the hamburger / X icon
   const toggleHamburger = () => {
     if (overlayIsOpen) {
       setOverlaySection(null);
@@ -487,9 +504,8 @@ export default function App() {
     }
   };
 
-  // Open About/Contact overlay from dropdown
   const openOverlay = (section) => {
-    setOverlaySection(section); // 'about' | 'contact'
+    setOverlaySection(section);
     setMenuOpen(true);
   };
 
@@ -497,17 +513,24 @@ export default function App() {
     setOverlaySection(null);
   };
 
-  // Icon is "open" (X) if dropdown or overlay is active
   const iconOpen = menuOpen || overlayIsOpen;
+
+  // Wrap Experience's artwork change handler so we can set hasTappedArtwork
+  const handleArtworkChange = (artwork) => {
+    setActiveArtwork(artwork);
+    if (artwork && !hasTappedArtwork) {
+      setHasTappedArtwork(true);
+    }
+  };
 
   return (
     <div
       style={{
-        width: '100vw',
-        height: '100vh',
-        background: '#111',
-        overflow: 'hidden',
-        position: 'relative',
+        width: "100vw",
+        height: "100vh",
+        background: "#111",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
       {/* ================================
@@ -516,64 +539,68 @@ export default function App() {
       {showLoader && (
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             inset: 0,
-            background: 'rgba(255, 255, 255, 1)',
-            backdropFilter: 'blur(22px) saturate(1.4)',
-            WebkitBackdropFilter: 'blur(22px) saturate(1.4)',
-            boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.06)',
+            background: "rgba(255, 255, 255, 1)",
+            backdropFilter: "blur(22px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(22px) saturate(1.4)",
+            boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.06)",
             zIndex: 999,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
             fontFamily:
-              'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-            transition: 'opacity 0.5s ease',
+              "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+            transition: "opacity 0.5s ease",
             opacity: progress === 100 ? 0 : 1,
-            pointerEvents: 'auto',
+            pointerEvents: "auto",
           }}
         >
-          <img
-            src="/loading-walk.gif"
-            alt="loading"
-            style={{
-              width: 'clamp(80px, 15vw, 140px)',
-              height: 'auto',
-              marginBottom: '20px',
-              animation: 'walkerBob 1.2s ease-in-out infinite',
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}
-          />
+<Lottie
+  animationData={loadingAnim}
+  loop
+  autoplay
+  speed = {0.7}
+  style={{
+    width: "clamp(80px, 15vw, 140px)",
+    height: "auto",
+    marginBottom: "20px",
+    animation: "walkerBob 1.2s ease-in-out infinite",
+    pointerEvents: "none",
+    userSelect: "none",
+  }}
+/>
+
+
 
           <div
             style={{
-              width: 'min(60vw, 220px)',
-              height: '6px',
-              background: 'rgba(255, 255, 255, 0.16)',
-              borderRadius: '999px',
-              overflow: 'hidden',
+              width: "min(60vw, 220px)",
+              height: "6px",
+              background: "rgba(255, 255, 255, 0.16)",
+              borderRadius: "999px",
+              overflow: "hidden",
             }}
           >
             <div
               style={{
                 width: `${progress}%`,
-                height: '100%',
-                background: '#000000',
-                transformOrigin: 'left center',
-                transition: 'width 0.18s ease-out',
+                height: "100%",
+                background: "#000000",
+                transformOrigin: "left center",
+                transition: "width 0.18s ease-out",
               }}
             />
           </div>
 
           <div
             style={{
-              marginTop: '10px',
-              fontSize: '13px',
-              letterSpacing: '0.03em',
-              textTransform: 'uppercase',
+              marginTop: "10px",
+              fontSize: "13px",
+              letterSpacing: "0.03em",
+              textTransform: "uppercase",
               opacity: 0.75,
             }}
           >
@@ -583,73 +610,85 @@ export default function App() {
       )}
 
       {/* ================================
-          MOBILE SCROLL PROMPT OVERLAY
+          SCROLL PROMPT OVERLAY (MOBILE + DESKTOP)
          ================================ */}
-      {isMobile && !showLoader && !overlayIsOpen && showScrollOverlay && (
- <div
-    style={{
-      position: 'absolute',
-      inset: 0,
-      zIndex: 80,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'rgba(10, 10, 10, 0.32)',
-      backdropFilter: 'blur(18px) saturate(1.3)',
-      WebkitBackdropFilter: 'blur(18px) saturate(1.3)',
-      pointerEvents: 'none', // let scroll pass through
-    }}
-  >
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        maxWidth: '260px',
-        gap: 16,
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}
-    >
-      {/* Centered Lottie finger */}
-      <Lottie
-        animationData={scrollThumbAnim}
-        loop
-        autoplay
-        style={{
-          width: 220,      // make it nice and big
-          height: 'auto',
-        }}
-      />
+      {!showLoader &&
+        !overlayIsOpen &&
+        scrollOverlayVisible && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 80,
+              background: "rgba(10, 10, 10, 0.32)",
+              backdropFilter: "blur(18px) saturate(1.3)",
+              WebkitBackdropFilter: "blur(18px) saturate(1.3)",
+              pointerEvents: "none",
+              transform: scrollOverlayDismissed
+                ? "translateY(-100%)"
+                : "translateY(0)",
+              opacity: scrollOverlayDismissed ? 0 : 1,
+              transition:
+                "transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.4s ease",
+            }}
+          >
+            {/* Centered prompt, raised above bottom */}
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                bottom: isMobile ? "36vh" : "26vh",
+                transform: "translateX(-50%)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "80vw",
+                maxWidth: 260,
+                gap: 12,
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            >
+              <Lottie
+                animationData={isMobile ? scrollThumbAnim : desktopScrollAnim}
+                loop
+                autoplay
+                style={{
+                  width: isMobile ? 220 : 150,
+                  height: "auto",
+                  display: "block",
+                }}
+              />
 
-      {/* White text, same font as rest of UI */}
-      <p
-        style={{
-          margin: 0,
-          color: '#fff',
-          fontSize: 16,
-          letterSpacing: '0.12em',
-          textAlign: 'center',
-          fontFamily:
-            'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-          opacity: 0.95,
-        }}
-      >
-        Scroll to view gallery
-      </p>
-    </div>
-  </div>
-)}
+              <p
+                style={{
+                  margin: 0,
+                  color: "#fff",
+                  fontSize: 16,
+                  letterSpacing: "0.12em",
+                  textAlign: "center",
+                  fontFamily:
+                    "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+                  opacity: 0.95,
+                  textTransform: "uppercase",
+                }}
+              >
+                Scroll to view gallery
+              </p>
+
+            
+            </div>
+          </div>
+        )}
 
       {/* ================================
-          HAMBURGER / X ICON (NO BG)
+          HAMBURGER / X ICON
          ================================ */}
       {!showLoader && (
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: 40,
             left: 40,
             zIndex: 40,
@@ -662,43 +701,43 @@ export default function App() {
               toggleHamburger();
             }}
             style={{
-              border: 'none',
-              background: 'transparent',
+              border: "none",
+              background: "transparent",
               padding: 0,
-              cursor: 'pointer',
+              cursor: "pointer",
               width: 50,
               height: 50,
-              position: 'relative',
-              outline: 'none',
-              WebkitTapHighlightColor: 'transparent',
-              overflow: 'visible',
+              position: "relative",
+              outline: "none",
+              WebkitTapHighlightColor: "transparent",
+              overflow: "visible",
             }}
           >
             {/* top line */}
             <span
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: 6,
                 right: 6,
                 height: 2,
                 borderRadius: 999,
-                background: '#000',
+                background: "#000",
                 transition:
-                  'transform 0.2s ease, top 0.2s ease, opacity 0.2s ease',
+                  "transform 0.2s ease, top 0.2s ease, opacity 0.2s ease",
                 top: iconOpen ? 15 : 8,
-                transform: iconOpen ? 'rotate(45deg)' : 'none',
+                transform: iconOpen ? "rotate(45deg)" : "none",
               }}
             />
             {/* middle line */}
             <span
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: 6,
                 right: 6,
                 height: 2,
                 borderRadius: 999,
-                background: '#000',
-                transition: 'opacity 0.2s ease',
+                background: "#000",
+                transition: "opacity 0.2s ease",
                 top: 15,
                 opacity: iconOpen ? 0 : 1,
               }}
@@ -706,49 +745,49 @@ export default function App() {
             {/* bottom line */}
             <span
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: 6,
                 right: 6,
                 height: 2,
                 borderRadius: 999,
-                background: '#000',
+                background: "#000",
                 transition:
-                  'transform 0.2s ease, top 0.2s ease, opacity 0.2s ease',
+                  "transform 0.2s ease, top 0.2s ease, opacity 0.2s ease",
                 top: iconOpen ? 15 : 22,
-                transform: iconOpen ? 'rotate(-45deg)' : 'none',
+                transform: iconOpen ? "rotate(-45deg)" : "none",
               }}
             />
           </button>
 
-          {/* Dropdown options directly under the hamburger */}
+          {/* Dropdown options under hamburger */}
           {menuOpen && !overlayIsOpen && (
             <div
               style={{
                 marginTop: 8,
                 padding: 0,
-                color: '#000',
+                color: "#000",
                 fontFamily:
-                  'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+                  "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
                 fontSize: 22,
                 fontWeight: 400,
-                display: 'flex',
-                flexDirection: 'column',
+                display: "flex",
+                flexDirection: "column",
                 gap: 8,
               }}
             >
               <button
                 type="button"
-                onClick={() => openOverlay('about')}
+                onClick={() => openOverlay("about")}
                 style={{
-                  border: 'none',
-                  background: 'transparent',
+                  border: "none",
+                  background: "transparent",
                   padding: 0,
                   margin: 0,
-                  cursor: 'pointer',
-                  color: '#000',
-                  textAlign: 'left',
-                  fontSize: 'inherit',
-                  fontFamily: 'inherit',
+                  cursor: "pointer",
+                  color: "#000",
+                  textAlign: "left",
+                  fontSize: "inherit",
+                  fontFamily: "inherit",
                 }}
               >
                 About me
@@ -756,17 +795,17 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => openOverlay('contact')}
+                onClick={() => openOverlay("contact")}
                 style={{
-                  border: 'none',
-                  background: 'transparent',
+                  border: "none",
+                  background: "transparent",
                   padding: 0,
                   margin: 0,
-                  cursor: 'pointer',
-                  color: '#000',
-                  textAlign: 'left',
-                  fontSize: 'inherit',
-                  fontFamily: 'inherit',
+                  cursor: "pointer",
+                  color: "#000",
+                  textAlign: "left",
+                  fontSize: "inherit",
+                  fontFamily: "inherit",
                 }}
               >
                 Contact me
@@ -777,51 +816,51 @@ export default function App() {
       )}
 
       {/* ================================
-          FROSTED OVERLAY FOR ABOUT / CONTACT
+          FROSTED ABOUT / CONTACT OVERLAY
          ================================ */}
       {overlayIsOpen && !showLoader && (
         <div
           onClick={closeOverlay}
           style={{
-            position: 'absolute',
+            position: "absolute",
             inset: 0,
             zIndex: 35,
-            background: 'rgba(0, 0, 0, 0.35)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            color: '#fff',
+            background: "rgba(0, 0, 0, 0.35)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            color: "#fff",
             fontFamily:
-              'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-            pointerEvents: 'auto',
+              "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+            pointerEvents: "auto",
           }}
         >
-          {/* Text content (clicks here don’t close overlay) */}
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: 'absolute',
-              top: '20vh',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'min(90vw, 700px)',
-              textAlign: 'left',
+              position: "absolute",
+              top: "20vh",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "min(90vw, 700px)",
+              textAlign: "left",
             }}
           >
-            {overlaySection === 'about' && (
+            {overlaySection === "about" && (
               <>
                 <h1
                   style={{
-                    margin: '0 0 12px',
-                    fontSize: 'clamp(22px, 4vw, 32px)',
+                    margin: "0 0 12px",
+                    fontSize: "clamp(22px, 4vw, 32px)",
                     fontWeight: 600,
                   }}
                 >
-                  About me
+                  <TypeLine text="About me" />
                 </h1>
+
                 <p
                   style={{
-                    margin: '0 0 8px',
-                    fontSize: 'clamp(14px, 2vw, 18px)',
+                    margin: "0 0 8px",
+                    fontSize: "clamp(14px, 2vw, 18px)",
                     lineHeight: 1.6,
                   }}
                 >
@@ -830,10 +869,11 @@ export default function App() {
                   curated selection of personal pieces, collaborations, and
                   client projects.
                 </p>
+
                 <p
                   style={{
                     margin: 0,
-                    fontSize: 'clamp(14px, 2vw, 18px)',
+                    fontSize: "clamp(14px, 2vw, 18px)",
                     lineHeight: 1.6,
                   }}
                 >
@@ -844,68 +884,72 @@ export default function App() {
               </>
             )}
 
-            {overlaySection === 'contact' && (
+            {overlaySection === "contact" && (
               <>
                 <h1
                   style={{
-                    margin: '0 0 12px',
-                    fontSize: 'clamp(22px, 4vw, 32px)',
+                    margin: "0 0 12px",
+                    fontSize: "clamp(22px, 4vw, 32px)",
                     fontWeight: 600,
                   }}
                 >
-                  Contact me
+                  <TypeLine text="Contact me" />
                 </h1>
+
                 <p
                   style={{
-                    margin: '0 0 8px',
-                    fontSize: 'clamp(14px, 2vw, 18px)',
+                    margin: "0 0 8px",
+                    fontSize: "clamp(14px, 2vw, 18px)",
                     lineHeight: 1.6,
                   }}
                 >
                   For commissions, collaborations, or studio work:
                 </p>
+
                 <p
                   style={{
-                    margin: '0 0 6px',
-                    fontSize: 'clamp(14px, 2vw, 18px)',
+                    margin: "0 0 6px",
+                    fontSize: "clamp(14px, 2vw, 18px)",
                     lineHeight: 1.6,
                   }}
                 >
-                  Email:{' '}
+                  Email:{" "}
                   <a
                     href="mailto:jake.w.leong@gmail.com"
                     style={{
-                      color: '#aad4ff',
-                      textDecoration: 'underline',
+                      color: "#aad4ff",
+                      textDecoration: "underline",
                     }}
                   >
                     jake.w.leong@gmail.com
                   </a>
                 </p>
+
                 <p
                   style={{
-                    margin: '0 0 6px',
-                    fontSize: 'clamp(14px, 2vw, 18px)',
+                    margin: "0 0 6px",
+                    fontSize: "clamp(14px, 2vw, 18px)",
                     lineHeight: 1.6,
                   }}
                 >
-                  Instagram:{' '}
+                  Instagram:{" "}
                   <a
                     href="https://www.instagram.com/jake__leong/"
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      color: '#aad4ff',
-                      textDecoration: 'underline',
+                      color: "#aad4ff",
+                      textDecoration: "underline",
                     }}
                   >
                     @jake__leong
                   </a>
                 </p>
+
                 <p
                   style={{
                     margin: 0,
-                    fontSize: 'clamp(14px, 2vw, 18px)',
+                    fontSize: "clamp(14px, 2vw, 18px)",
                     lineHeight: 1.6,
                   }}
                 >
@@ -917,6 +961,7 @@ export default function App() {
           </div>
         </div>
       )}
+
 
       {/* ================================
           MEDIA CAROUSEL OVERLAY
@@ -930,57 +975,95 @@ export default function App() {
         />
       )}
 
-      {/* Floating hint (only when not loading, no overlay, and before first scroll) */}
-      {!hasInteracted && !showLoader && !overlayIsOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '12vh',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 30,
-            textAlign: 'center',
-            color: '#000',
-            fontFamily:
-              'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-            fontSize: 'clamp(12px, 1.7vw, 16px)',
-            pointerEvents: 'none',
-            animation: 'scrollHintPulse 1.75s ease-in-out infinite',
-            padding: '0 12px',
-          }}
-        >
-          <div>Scroll up / down to walk</div>
-          <div>Click on an artwork to inspect</div>
-          <div style={{ fontSize: '1.4em', marginTop: 2 }}>⇵</div>
-        </div>
-      )}
+      {/* Desktop: one-time click/scroll hint at bottom */}
+      {!isMobile &&
+  !showLoader &&
+  !overlayIsOpen &&
+  !mediaOverlayOpen &&
+  !activeArtwork &&
+  !hasTappedArtwork && (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "20vh",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 30,
+        padding: "8px 16px",
+        borderRadius: 999,
+        background: "rgba(0, 0, 0, 0.75)",
+        color: "#fff",
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+        fontSize: "clamp(12px, 1.2vw, 14px)",
+        pointerEvents: "none",
+        animation: "scrollHintPulse 1.75s ease-in-out infinite",
+        textAlign: "center",
+        whiteSpace: "nowrap",
+      }}
+    >
+      Tap an artwork to inspect
+    </div>
+  )}
 
-      {/* Inspect-mode text overlay (hidden while loading or overlay open) */}
+
+      {/* Mobile: "Tap artworks" hint (bottom-center) – one-time per session */}
+      {isMobile &&
+        !showLoader &&
+        !overlayIsOpen &&
+        !mediaOverlayOpen &&
+        !activeArtwork &&
+        !hasTappedArtwork && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "20vh",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 30,
+              padding: "8px 16px",
+              borderRadius: 999,
+              background: "rgba(0, 0, 0, 0.75)",
+              color: "#fff",
+              fontFamily:
+                "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: "clamp(12px, 3.4vw, 14px)",
+              pointerEvents: "none",
+              animation: "scrollHintPulse 1.75s ease-in-out infinite",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Tap an artwork to inspect
+          </div>
+        )}
+
+      {/* Inspect-mode text overlay */}
       {activeArtwork && !showLoader && !overlayIsOpen && (
         <div
           style={{
-            position: 'absolute',
-            top: '15vh',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            position: "absolute",
+            top: "15vh",
+            left: "50%",
+            transform: "translateX(-50%)",
             zIndex: 20,
-            textAlign: 'center',
-            color: '#000',
+            textAlign: "center",
+            color: "#000",
             fontFamily:
-              'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-            pointerEvents: 'none',
-            padding: '0 16px',
-            maxWidth: 'min(90vw, 900px)',
+              "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+            pointerEvents: "none",
+            padding: "0 16px",
+            maxWidth: "min(90vw, 900px)",
           }}
         >
           {toLines(activeArtwork.heading).map((line, i, arr) => (
             <h1
               key={`heading-${i}`}
               style={{
-                margin: i === 0 ? 0 : '0.25em 0 0',
+                margin: i === 0 ? 0 : "0.25em 0 0",
                 marginBottom: i === arr.length - 1 ? 8 : 0,
                 fontWeight: 700,
-                fontSize: 'clamp(22px, 4vw, 36px)',
+                fontSize: "clamp(22px, 4vw, 36px)",
                 lineHeight: 1.1,
               }}
             >
@@ -992,10 +1075,10 @@ export default function App() {
             <h2
               key={`sub-${i}`}
               style={{
-                margin: i === 0 ? 0 : '0.15em 0 0',
+                margin: i === 0 ? 0 : "0.15em 0 0",
                 marginBottom: i === arr.length - 1 ? 12 : 0,
                 fontWeight: 400,
-                fontSize: 'clamp(14px, 2.3vw, 20px)',
+                fontSize: "clamp(14px, 2.3vw, 20px)",
                 lineHeight: 1.3,
               }}
             >
@@ -1004,13 +1087,13 @@ export default function App() {
           ))}
 
           {toLines(activeArtwork.body).map((line, i) => {
-            if (line && typeof line === 'object' && line.url) {
+            if (line && typeof line === "object" && line.url) {
               return (
                 <p
                   key={`body-${i}`}
                   style={{
-                    margin: i === 0 ? 0 : '0.2em 0 0',
-                    fontSize: 'clamp(12px, 2vw, 18px)',
+                    margin: i === 0 ? 0 : "0.2em 0 0",
+                    fontSize: "clamp(12px, 2vw, 18px)",
                     lineHeight: 1.4,
                   }}
                 >
@@ -1019,9 +1102,9 @@ export default function App() {
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      color: '#0070f3',
-                      textDecoration: 'underline',
-                      pointerEvents: 'auto',
+                      color: "#0070f3",
+                      textDecoration: "underline",
+                      pointerEvents: "auto",
                     }}
                   >
                     <TypeLine text={line.text || line.url} />
@@ -1034,8 +1117,8 @@ export default function App() {
               <p
                 key={`body-${i}`}
                 style={{
-                  margin: i === 0 ? 0 : '0.2em 0 0',
-                  fontSize: 'clamp(12px, 2vw, 18px)',
+                  margin: i === 0 ? 0 : "0.2em 0 0",
+                  fontSize: "clamp(12px, 2vw, 18px)",
                   lineHeight: 1.4,
                 }}
               >
@@ -1049,7 +1132,7 @@ export default function App() {
             <div
               style={{
                 marginTop: 16,
-                pointerEvents: 'auto',
+                pointerEvents: "auto",
               }}
             >
               <button
@@ -1059,15 +1142,15 @@ export default function App() {
                   setMediaOverlayOpen(true);
                 }}
                 style={{
-                  padding: '10px 20px',
+                  padding: "10px 20px",
                   borderRadius: 999,
-                  border: '1px solid #000',
-                  background: '#000',
-                  color: '#fff',
-                  fontSize: 'clamp(12px, 1.8vw, 16px)',
-                  cursor: 'pointer',
+                  border: "1px solid #000",
+                  background: "#000",
+                  color: "#fff",
+                  fontSize: "clamp(12px, 1.8vw, 16px)",
+                  cursor: "pointer",
                   fontFamily:
-                    'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+                    "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
                 }}
               >
                 View work
@@ -1086,15 +1169,18 @@ export default function App() {
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
         }}
-        style={{ width: '100%', height: '100%', display: 'block' }}
+        style={{ width: "100%", height: "100%", display: "block" }}
       >
-        <ScrollControls pages={8} damping={0.15}>
+        <ScrollControls
+          pages={isMobile ? 8 : 5}
+          damping={isMobile ? 0.06 : 0.15}
+        >
           <Experience
-            onArtworkChange={setActiveArtwork}
+            onArtworkChange={handleArtworkChange}
             autoFocusFirst={false}
             isLowPower={isLowPower}
           />
-           <Preload all />
+          <Preload all />
         </ScrollControls>
       </Canvas>
 
