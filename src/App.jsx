@@ -655,7 +655,7 @@ export default function App() {
                 loop
                 autoplay
                 style={{
-                  width: isMobile ? 220 : 150,
+                  width: isMobile ? 220 : 100,
                   height: "auto",
                   display: "block",
                 }}
