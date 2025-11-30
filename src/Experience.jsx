@@ -9,8 +9,15 @@ export default function Experience({
   onArtworkChange,
   autoFocusFirst = false,
   isLowPower = false,
+  onScrollContainerReady,
 }) {
   const scroll = useScroll();
+
+    useEffect(() => {
+    if (onScrollContainerReady && scroll && scroll.el) {
+      onScrollContainerReady(scroll.el);
+    }
+  }, [scroll, onScrollContainerReady]);
 
   // 'walk' | 'approach' | 'inspect'
   const [mode, setMode] = useState('walk');

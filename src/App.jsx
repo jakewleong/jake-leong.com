@@ -9,7 +9,6 @@ import scrollThumbAnim from "./animations/scroll-thumb.json";
 import desktopScrollAnim from "./animations/scroll-desktop.json";
 import loadingAnim from "./animations/loading-walk.json";
 
-
 // Small helper: typewriter effect for one line of text
 function TypeLine({ text, speed = 25 }) {
   const [shown, setShown] = useState("");
@@ -409,6 +408,8 @@ export default function App() {
 
   const isMobile = useIsMobile();
 
+  const [scrollContainer, setScrollContainer] = useState(null);
+
   // Hamburger / overlays
   const [menuOpen, setMenuOpen] = useState(false);
   const [overlaySection, setOverlaySection] = useState(null);
@@ -515,6 +516,148 @@ export default function App() {
 
   const iconOpen = menuOpen || overlayIsOpen;
 
+  /**
+   * MOBILE CUSTOM SCROLL PHYSICS
+   * - We fully control both vertical and horizontal swipes inside the scroll container
+   * - No native momentum → tapping while moving won't be eaten by the browser
+   */
+  useEffect(() => {
+    if (!isMobile || !scrollContainer || overlayIsOpen || mediaOverlayOpen)
+      return;
+
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let lastTime = 0;
+    let gestureType = "none"; // 'none' | 'horizontal' | 'vertical'
+    let velocity = 0;
+    let inertiaFrame = null;
+
+    const SWIPE_STRENGTH = 1.8; // how far a swipe moves the gallery
+    const FRICTION = 0.985; // inertia slowdown (closer to 1 = longer glide)
+    const DEADZONE = 12; // minimum movement before deciding
+    const AXIS_BIAS = 2; // how much more one axis must dominate to pick it
+
+    const stopInertia = () => {
+      if (inertiaFrame !== null) {
+        cancelAnimationFrame(inertiaFrame);
+        inertiaFrame = null;
+      }
+    };
+
+    // Help reduce native scroll / bounce behaviour on this element
+    const prevTouchAction = scrollContainer.style.touchAction;
+    scrollContainer.style.touchAction = "none";
+
+    const onTouchStart = (e) => {
+      if (!e.touches || e.touches.length !== 1) return;
+      const t = e.touches[0];
+
+      startX = t.clientX;
+      startY = t.clientY;
+      lastX = t.clientX;
+      lastY = t.clientY;
+      lastTime = performance.now();
+      gestureType = "none";
+      velocity = 0;
+
+      // stop any ongoing momentum
+      stopInertia();
+    };
+
+    const onTouchMove = (e) => {
+      if (!e.touches || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const now = performance.now();
+
+      const dxTotal = t.clientX - startX;
+      const dyTotal = t.clientY - startY;
+
+      // Haven't decided yet: is this a vertical scroll or a horizontal swipe?
+      if (gestureType === "none") {
+        const dist = Math.hypot(dxTotal, dyTotal);
+        if (dist < DEADZONE) {
+          // too little movement; let other handlers do their thing
+          return;
+        }
+
+        // Decide on first meaningful movement
+        if (Math.abs(dxTotal) > Math.abs(dyTotal) * AXIS_BIAS) {
+          gestureType = "horizontal";
+        } else {
+          gestureType = "vertical";
+        }
+      }
+
+      // From here on, this gesture is ours: prevent native scrolling
+      e.preventDefault();
+
+      const dx = t.clientX - lastX;
+      const dy = t.clientY - lastY;
+      const dt = now - lastTime || 16;
+
+      lastX = t.clientX;
+      lastY = t.clientY;
+      lastTime = now;
+
+      let deltaScroll = 0;
+
+      if (gestureType === "horizontal") {
+        // Swipe LEFT should feel like moving forward in the gallery
+        deltaScroll = dx * SWIPE_STRENGTH;
+      } else if (gestureType === "vertical") {
+        // Drag UP should move forward (scroll down)
+        deltaScroll = -dy * SWIPE_STRENGTH;
+      }
+
+      scrollContainer.scrollTop += deltaScroll;
+
+      // Approximate velocity in scroll units per ms
+      velocity = deltaScroll / dt;
+    };
+
+    const onTouchEnd = () => {
+      if (gestureType === "none" || Math.abs(velocity) < 0.01) {
+        gestureType = "none";
+        return;
+      }
+
+      // Apply inertia after user lifts finger
+      const step = () => {
+        scrollContainer.scrollTop += velocity * 16; // 16ms ~ 60fps
+        velocity *= FRICTION;
+
+        if (Math.abs(velocity) > 0.01) {
+          inertiaFrame = requestAnimationFrame(step);
+        } else {
+          inertiaFrame = null;
+        }
+      };
+
+      inertiaFrame = requestAnimationFrame(step);
+      gestureType = "none";
+    };
+
+    scrollContainer.addEventListener("touchstart", onTouchStart, {
+      passive: false,
+    });
+    scrollContainer.addEventListener("touchmove", onTouchMove, {
+      passive: false,
+    });
+    scrollContainer.addEventListener("touchend", onTouchEnd);
+    scrollContainer.addEventListener("touchcancel", onTouchEnd);
+
+    return () => {
+      stopInertia();
+      scrollContainer.style.touchAction = prevTouchAction;
+      scrollContainer.removeEventListener("touchstart", onTouchStart);
+      scrollContainer.removeEventListener("touchmove", onTouchMove);
+      scrollContainer.removeEventListener("touchend", onTouchEnd);
+      scrollContainer.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [isMobile, scrollContainer, overlayIsOpen, mediaOverlayOpen]);
+
   // Wrap Experience's artwork change handler so we can set hasTappedArtwork
   const handleArtworkChange = (artwork) => {
     setActiveArtwork(artwork);
@@ -558,22 +701,20 @@ export default function App() {
             pointerEvents: "auto",
           }}
         >
-<Lottie
-  animationData={loadingAnim}
-  loop
-  autoplay
-  speed = {0.7}
-  style={{
-    width: "clamp(80px, 15vw, 140px)",
-    height: "auto",
-    marginBottom: "20px",
-    animation: "walkerBob 1.2s ease-in-out infinite",
-    pointerEvents: "none",
-    userSelect: "none",
-  }}
-/>
-
-
+          <Lottie
+            animationData={loadingAnim}
+            loop
+            autoplay
+            speed={0.7}
+            style={{
+              width: "clamp(80px, 15vw, 140px)",
+              height: "auto",
+              marginBottom: "20px",
+              animation: "walkerBob 1.2s ease-in-out infinite",
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          />
 
           <div
             style={{
@@ -676,8 +817,6 @@ export default function App() {
               >
                 Scroll to view gallery
               </p>
-
-            
             </div>
           </div>
         )}
@@ -962,7 +1101,6 @@ export default function App() {
         </div>
       )}
 
-
       {/* ================================
           MEDIA CAROUSEL OVERLAY
          ================================ */}
@@ -977,35 +1115,34 @@ export default function App() {
 
       {/* Desktop: one-time click/scroll hint at bottom */}
       {!isMobile &&
-  !showLoader &&
-  !overlayIsOpen &&
-  !mediaOverlayOpen &&
-  !activeArtwork &&
-  !hasTappedArtwork && (
-    <div
-      style={{
-        position: "absolute",
-        bottom: "20vh",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 30,
-        padding: "8px 16px",
-        borderRadius: 999,
-        background: "rgba(0, 0, 0, 0.75)",
-        color: "#fff",
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-        fontSize: "clamp(12px, 1.2vw, 14px)",
-        pointerEvents: "none",
-        animation: "scrollHintPulse 1.75s ease-in-out infinite",
-        textAlign: "center",
-        whiteSpace: "nowrap",
-      }}
-    >
-      Tap an artwork to inspect
-    </div>
-  )}
-
+        !showLoader &&
+        !overlayIsOpen &&
+        !mediaOverlayOpen &&
+        !activeArtwork &&
+        !hasTappedArtwork && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "20vh",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 30,
+              padding: "8px 16px",
+              borderRadius: 999,
+              background: "rgba(0, 0, 0, 0.75)",
+              color: "#fff",
+              fontFamily:
+                "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: "clamp(12px, 1.2vw, 14px)",
+              pointerEvents: "none",
+              animation: "scrollHintPulse 1.75s ease-in-out infinite",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Tap an artwork to inspect
+          </div>
+        )}
 
       {/* Mobile: "Tap artworks" hint (bottom-center) – one-time per session */}
       {isMobile &&
@@ -1172,13 +1309,14 @@ export default function App() {
         style={{ width: "100%", height: "100%", display: "block" }}
       >
         <ScrollControls
-          pages={isMobile ? 8 : 5}
+          pages={isMobile ? 8.5 : 10}
           damping={isMobile ? 0.06 : 0.15}
         >
           <Experience
             onArtworkChange={handleArtworkChange}
             autoFocusFirst={false}
             isLowPower={isLowPower}
+            onScrollContainerReady={setScrollContainer}
           />
           <Preload all />
         </ScrollControls>

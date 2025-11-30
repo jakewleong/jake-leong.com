@@ -17,7 +17,7 @@ const artworks = [
     ],
   },
 
-{
+  {
     id: 'Self',
     slot: 1,
     model: '/models/art/self.glb',
@@ -25,7 +25,6 @@ const artworks = [
     yOffset: 0,
     heading: 'Self',
     subheading: 'Central Saint Martins - Final Major Project',
-    // 🔹 New: media items for the carousel
     detailMedia: [
       {
         type: 'image',
@@ -45,7 +44,7 @@ const artworks = [
     ],
   },
 
-    {
+  {
     id: 'mowalola',
     slot: 2,
     model: '/models/art/mowalola.glb',
@@ -53,7 +52,6 @@ const artworks = [
     yOffset: 0,
     heading: 'Mowalola Video',
     subheading: '3D Artist / Art direction',
-    
     detailMedia: [
       {
         type: 'video',
@@ -78,13 +76,12 @@ const artworks = [
     yOffset: 0,
     heading: 'Distorted Realities',
     subheading: 'Central Saint Martins - MA Final Project',
-    
     detailMedia: [
       {
         type: 'video',
         src: 'https://player.vimeo.com/video/1140604422?h=3b5451ab9b',
         alt: 'Distorted Realities Video',
-        orientation: 'landscape'
+        orientation: 'landscape',
       },
       {
         type: 'image',
@@ -163,7 +160,6 @@ const artworks = [
     yOffset: 0,
     heading: 'Labrum London',
     subheading: '3D Artist / Animator',
-    // 🔹 New: media items for the carousel
     detailMedia: [
       {
         type: 'video',
@@ -179,19 +175,21 @@ const artworks = [
       },
     ],
   },
-  
 ];
 
-// 👉 Non-clickable WIP slot
-const WIP_MODEL = '/models/art/wip.glb'; // <- your GLB path
-const MODULE_LENGTH = 19.5;
+// 👉 WIP slot (animated, clickable)
+const WIP_MODEL = '/models/art/wip.glb';
+
+// Different spacing for desktop vs mobile
+const MODULE_LENGTH_DESKTOP = 19.5;
+const MODULE_LENGTH_MOBILE = 9; // ← tweak this for how tight mobile feels
 
 // Scroll tuning
 const SCROLL_MULTIPLIER = 1;
 
 // Desktop vs mobile damping
-const DESKTOP_DAMPING = 0.03; // original value
-const MOBILE_DAMPING = 0.7;  // slightly snappier on mobile; tweak to taste
+const DESKTOP_DAMPING = 0.03;
+const MOBILE_DAMPING = 0.7;
 
 const isMobileWidth = () =>
   typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -227,11 +225,13 @@ export default function Gallery({
     });
   }, [galleryScene]);
 
-  const totalDistance = MODULE_LENGTH * (LAST_SLOT - FIRST_SLOT);
+  const isMobile = isMobileWidth();
+  const moduleLength = isMobile ? MODULE_LENGTH_MOBILE : MODULE_LENGTH_DESKTOP;
+
+  const totalDistance = moduleLength * (LAST_SLOT - FIRST_SLOT);
 
   useFrame(() => {
     const targetScroll = scroll.offset;
-
     const damping = isMobileWidth() ? MOBILE_DAMPING : DESKTOP_DAMPING;
 
     smoothScroll.current = THREE.MathUtils.lerp(
@@ -254,7 +254,11 @@ export default function Gallery({
   return (
     <group ref={group}>
       {/* Extra background before first slot */}
-      <BackgroundSlot index={FIRST_SLOT - 1} galleryScene={galleryScene} />
+      <BackgroundSlot
+        index={FIRST_SLOT - 1}
+        galleryScene={galleryScene}
+        moduleLength={moduleLength}
+      />
 
       {/* First artwork (title) is NON-clickable */}
       {artworks.map((art, index) =>
@@ -263,6 +267,7 @@ export default function Gallery({
             key={art.id}
             art={art}
             galleryScene={galleryScene}
+            moduleLength={moduleLength}
           />
         ) : (
           <ArtSlot
@@ -273,33 +278,36 @@ export default function Gallery({
             onSelectArtwork={onSelectArtwork}
             onScrollToArtworkOffset={onScrollToArtworkOffset}
             selectedArtworkId={selectedArtworkId}
-            // If you ever re-enable autoFocusFirst, we probably want
-            // the *first clickable* artwork (index > 0)
             autoSelectOnMount={autoFocusFirst && index === 1}
+            moduleLength={moduleLength}
           />
         )
       )}
 
-      {/* 🌱 Non-clickable “Work in progress” tile at the end */}
+      {/* 🌱 Animated, clickable “Work in progress” tile at the end */}
       <WorkInProgressSlot
-  slot={WIP_SLOT}
-  model={WIP_MODEL}
-  galleryScene={galleryScene}
-  totalDistance={totalDistance}
-  onSelectArtwork={onSelectArtwork}
-  onScrollToArtworkOffset={onScrollToArtworkOffset}
-  selectedArtworkId={selectedArtworkId}
-/>
-
+        slot={WIP_SLOT}
+        model={WIP_MODEL}
+        galleryScene={galleryScene}
+        totalDistance={totalDistance}
+        onSelectArtwork={onSelectArtwork}
+        onScrollToArtworkOffset={onScrollToArtworkOffset}
+        selectedArtworkId={selectedArtworkId}
+        moduleLength={moduleLength}
+      />
 
       {/* Extra background after WIP */}
-      <BackgroundSlot index={LAST_SLOT + 1} galleryScene={galleryScene} />
+      <BackgroundSlot
+        index={LAST_SLOT + 1}
+        galleryScene={galleryScene}
+        moduleLength={moduleLength}
+      />
     </group>
   );
 }
 
-function BackgroundSlot({ index, galleryScene }) {
-  const position = [index * MODULE_LENGTH, 0, 0];
+function BackgroundSlot({ index, galleryScene, moduleLength }) {
+  const position = [index * moduleLength, 0, 0];
   return (
     <group position={position}>
       <primitive object={galleryScene.clone()} />
@@ -310,7 +318,7 @@ function BackgroundSlot({ index, galleryScene }) {
 /**
  * Static, non-clickable slot (used for the title model).
  */
-function StaticArtSlot({ art, galleryScene }) {
+function StaticArtSlot({ art, galleryScene, moduleLength }) {
   const slotGroup = useRef();
   const { scene: artScene } = useGLTF(art.model);
 
@@ -324,7 +332,7 @@ function StaticArtSlot({ art, galleryScene }) {
     });
   }, [artScene]);
 
-  const slotPosition = [art.slot * MODULE_LENGTH, 0, 0];
+  const slotPosition = [art.slot * moduleLength, 0, 0];
 
   return (
     <group ref={slotGroup} position={slotPosition}>
@@ -344,6 +352,7 @@ function ArtSlot({
   onScrollToArtworkOffset,
   selectedArtworkId,
   autoSelectOnMount = false,
+  moduleLength,
 }) {
   const slotGroup = useRef();
   const { scene: artScene } = useGLTF(art.model);
@@ -358,7 +367,7 @@ function ArtSlot({
     });
   }, [artScene]);
 
-  const slotPosition = [art.slot * MODULE_LENGTH, 0, 0];
+  const slotPosition = [art.slot * moduleLength, 0, 0];
 
   return (
     <group ref={slotGroup} position={slotPosition}>
@@ -376,16 +385,16 @@ function ArtSlot({
         heading={art.heading}
         subheading={art.subheading}
         body={art.body}
-        detailMedia={art.detailMedia} // 🔹 new
+        detailMedia={art.detailMedia}
         autoSelectOnMount={autoSelectOnMount}
+        moduleLength={moduleLength}
       />
     </group>
   );
 }
 
 /**
- * Non-interactive “work in progress” tile.
- * No hover, no click, just a small hint at future work.
+ * Animated, clickable “work in progress” tile.
  */
 function WorkInProgressSlot({
   slot,
@@ -395,6 +404,7 @@ function WorkInProgressSlot({
   onSelectArtwork,
   onScrollToArtworkOffset,
   selectedArtworkId,
+  moduleLength,
 }) {
   const slotGroup = useRef();
 
@@ -416,7 +426,6 @@ function WorkInProgressSlot({
   useEffect(() => {
     if (!actions || !names || names.length === 0) return;
 
-    // if you have a specific name like 'WIP_Loop', you can search for it here
     const clipName = names[0];
     const action = actions[clipName];
     if (!action) return;
@@ -428,7 +437,7 @@ function WorkInProgressSlot({
     return () => action.stop();
   }, [actions, names]);
 
-  const slotPosition = [slot * MODULE_LENGTH, 0, 0];
+  const slotPosition = [slot * moduleLength, 0, 0];
 
   return (
     <group ref={slotGroup} position={slotPosition}>
@@ -448,15 +457,14 @@ function WorkInProgressSlot({
         subheading=""
         body={null}
         detailMedia={[]}
+        moduleLength={moduleLength}
       />
     </group>
   );
 }
 
-
 /**
- * Fully interactive artwork with a larger invisible hit-area,
- * computed from the model's actual bounds so it's symmetric.
+ * Fully interactive artwork with a larger invisible hit-area.
  */
 function ClickableArtwork({
   id,
@@ -473,16 +481,16 @@ function ClickableArtwork({
   body,
   detailMedia,
   autoSelectOnMount = false,
+  moduleLength,
 }) {
   const artGroup = useRef();
   const [hovered, setHovered] = useState(false);
   const originalMaterialsRef = useRef([]);
   const hasAutoSelectedRef = useRef(false);
 
-  // 🔐 Fixed, non-overlapping hit box per artwork
-  // Modules are ~19.5 units apart, so a 3–4 unit wide box is very safe.
-  const hitBoxCenter = [0, 1.5, 0];      // roughly chest-height
-  const hitBoxSize = [3.5, 4, 3.5];      // width, height, depth
+  // Fixed, non-overlapping hit box per artwork
+  const hitBoxCenter = [0, 1.5, 0]; // roughly chest-height
+  const hitBoxSize = [3.5, 4, 3.5]; // width, height, depth
 
   const position = [0, yOffset, 0.5];
 
@@ -547,9 +555,9 @@ function ClickableArtwork({
     );
 
     // smooth scroll target so this artwork ends up centered
-    if (onScrollToArtworkOffset && totalDistance > 0) {
+    if (onScrollToArtworkOffset && totalDistance > 0 && moduleLength) {
       const rawOffset =
-        (slot * MODULE_LENGTH) / (totalDistance * SCROLL_MULTIPLIER);
+        (slot * moduleLength) / (totalDistance * SCROLL_MULTIPLIER);
       const targetOffset = Math.min(Math.max(rawOffset, 0), 1);
       onScrollToArtworkOffset(targetOffset);
     }
@@ -615,7 +623,6 @@ function ClickableArtwork({
     </group>
   );
 }
-
 
 // Preload models
 useGLTF.preload('/models/gallery_base.glb');
