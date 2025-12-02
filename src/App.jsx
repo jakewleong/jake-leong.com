@@ -410,6 +410,9 @@ export default function App() {
 
   const [scrollContainer, setScrollContainer] = useState(null);
 
+  // Desktop arrow movement: -1 = left, 1 = right, 0 = idle
+  const [moveDir, setMoveDir] = useState(0);
+
   // Hamburger / overlays
   const [menuOpen, setMenuOpen] = useState(false);
   const [overlaySection, setOverlaySection] = useState(null);
@@ -657,6 +660,54 @@ export default function App() {
       scrollContainer.removeEventListener("touchcancel", onTouchEnd);
     };
   }, [isMobile, scrollContainer, overlayIsOpen, mediaOverlayOpen]);
+
+  /**
+   * DESKTOP: smooth continuous movement when holding arrow buttons
+   */
+  useEffect(() => {
+    if (
+      isMobile ||
+      !scrollContainer ||
+      moveDir === 0 ||
+      overlayIsOpen ||
+      mediaOverlayOpen
+    )
+      return;
+
+    let frameId = null;
+    let lastTime = performance.now();
+
+    const step = (now) => {
+      const dt = now - lastTime;
+      lastTime = now;
+
+      const el = scrollContainer;
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      if (maxScroll <= 0) {
+        frameId = requestAnimationFrame(step);
+        return;
+      }
+
+      // fraction of full scroll range per second (tweak to taste)
+      const RANGE_PER_SECOND = 0.45; // 0.45x gallery per second
+      const delta =
+        moveDir * RANGE_PER_SECOND * (dt / 1000) * maxScroll;
+
+      let nextTop = el.scrollTop + delta;
+      if (nextTop < 0) nextTop = 0;
+      if (nextTop > maxScroll) nextTop = maxScroll;
+
+      el.scrollTop = nextTop;
+
+      frameId = requestAnimationFrame(step);
+    };
+
+    frameId = requestAnimationFrame(step);
+
+    return () => {
+      if (frameId !== null) cancelAnimationFrame(frameId);
+    };
+  }, [isMobile, scrollContainer, moveDir, overlayIsOpen, mediaOverlayOpen]);
 
   // Wrap Experience's artwork change handler so we can set hasTappedArtwork
   const handleArtworkChange = (artwork) => {
@@ -1173,6 +1224,72 @@ export default function App() {
           >
             Tap an artwork to inspect
           </div>
+        )}
+
+      {/* Desktop arrow controls: hold to walk left/right */}
+      {!isMobile &&
+        !showLoader &&
+        !overlayIsOpen &&
+        !mediaOverlayOpen && (
+          <>
+            <button
+              type="button"
+              onMouseDown={() => setMoveDir(-1)}
+              onMouseUp={() => setMoveDir(0)}
+              onMouseLeave={() => setMoveDir(0)}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: 24,
+                transform: "translateY(-50%)",
+                zIndex: 25,
+                width: 40,
+                height: 40,
+                borderRadius: 999,
+                border: "none",
+                background: "rgba(0, 0, 0, 0.75)",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: 22,
+                WebkitTapHighlightColor: "transparent",
+              }}
+              aria-label="Walk left"
+            >
+              ‹
+            </button>
+
+            <button
+              type="button"
+              onMouseDown={() => setMoveDir(1)}
+              onMouseUp={() => setMoveDir(0)}
+              onMouseLeave={() => setMoveDir(0)}
+              style={{
+                position: "absolute",
+                top: "50%",
+                right: 24,
+                transform: "translateY(-50%)",
+                zIndex: 25,
+                width: 40,
+                height: 40,
+                borderRadius: 999,
+                border: "none",
+                background: "rgba(0, 0, 0, 0.75)",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: 22,
+                WebkitTapHighlightColor: "transparent",
+              }}
+              aria-label="Walk right"
+            >
+              ›
+            </button>
+          </>
         )}
 
       {/* Inspect-mode text overlay */}

@@ -79,7 +79,7 @@ const artworks = [
     detailMedia: [
       {
         type: 'video',
-        src: 'https://player.vimeo.com/video/1140604422?h=3b5451ab9b',
+        src: 'https://player.vimeo.com/video/1142593694?h=e06d972c00',
         alt: 'Distorted Realities Video',
         orientation: 'landscape',
       },
