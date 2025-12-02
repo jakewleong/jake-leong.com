@@ -50,7 +50,7 @@ const artworks = [
     model: '/models/art/mowalola.glb',
     scale: 1,
     yOffset: 0,
-    heading: 'Mowalola Video',
+    heading: 'Digital Runway',
     subheading: '3D Artist / Art direction',
     detailMedia: [
       {
@@ -64,6 +64,21 @@ const artworks = [
         src: 'https://player.vimeo.com/video/1140600365?h=e1554e4e98',
         alt: 'Mowalola 2',
         orientation: 'portrait',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54960636035_9a95869454_b.jpg',
+        alt: 'DigitalRunwayScreenshot1',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54960582309_79cb868bb4_b.jpg',
+        alt: 'DigitalRunwayScreenshot2',
+      },
+      {
+        type: 'image',
+        src: 'https://live.staticflickr.com/65535/54960509513_e3b6f208f1_b.jpg',
+        alt: 'DigitalRunwayScreenshot3',
       },
     ],
   },
