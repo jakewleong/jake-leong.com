@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "opt:glbs": "node scripts/optimize-glbs.mjs",
+    "knip": "knip"
   },
   "dependencies": {
-    "@lottiefiles/lottie-player": "^2.0.12",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
     "lottie-react": "^2.4.1",
@@ -27,6 +28,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "gltf-pipeline": "^4.3.0",
+    "knip": "^5.82.1",
     "vite": "^7.1.7"
   }
 }

@@ -5,6 +5,18 @@ import Character from './components/Character';
 import Gallery from './components/Gallery';
 import CameraRig from './components/CameraRig';
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const CHARACTER_LEFT_X = -1.2;
+const CENTER_EPS = 0.01;
+const CHAR_EPS = 0.05;
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
 export default function Experience({
   onArtworkChange,
   autoFocusFirst = false,
@@ -13,35 +25,37 @@ export default function Experience({
 }) {
   const scroll = useScroll();
 
-    useEffect(() => {
-    if (onScrollContainerReady && scroll && scroll.el) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const [mode, setMode] = useState('walk'); // 'walk' | 'approach' | 'inspect'
+  const [selectedArtwork, setSelectedArtwork] = useState(null);
+  const [characterTargetX, setCharacterTargetX] = useState(0);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Refs
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const characterXRef = useRef(0);
+  const lastScroll = useRef(0);
+  const galleryOffsetRef = useRef(0);
+  const inspectTargetOffsetRef = useRef(scroll.offset);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Pass scroll container to parent
+  // ─────────────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (onScrollContainerReady && scroll?.el) {
       onScrollContainerReady(scroll.el);
     }
   }, [scroll, onScrollContainerReady]);
 
-  // 'walk' | 'approach' | 'inspect'
-  const [mode, setMode] = useState('walk');
-  const [selectedArtwork, setSelectedArtwork] = useState(null);
+  // ─────────────────────────────────────────────────────────────────────────
+  // Scroll helper
+  // ─────────────────────────────────────────────────────────────────────────
 
-  const [characterTargetX, setCharacterTargetX] = useState(0);
-  const characterXRef = useRef(0);
-
-  const lastScroll = useRef(0);
-
-  // Smoothed gallery offset (0 → 1), written by Gallery
-  const galleryOffsetRef = useRef(0);
-  // Target scroll offset for inspect (0 → 1)
-  const inspectTargetOffsetRef = useRef(scroll.offset);
-
-  // Character stand position in inspect (slightly left of center)
-  const CHARACTER_LEFT_X = -1.2;
-
-  // how close gallery must be to target to count as "centered"
-  const CENTER_EPS = 0.01;
-  // how close character must be to targetX to count as "in position"
-  const CHAR_EPS = 0.05;
-
-  // Helper to scroll the HTML container to a specific offset (0 → 1)
   const scrollToOffset = (targetOffset) => {
     const el = scroll.el;
     if (!el) return;
@@ -57,7 +71,10 @@ export default function Experience({
     });
   };
 
-  // Centralised helper to exit inspect mode
+  // ─────────────────────────────────────────────────────────────────────────
+  // Exit inspect mode
+  // ─────────────────────────────────────────────────────────────────────────
+
   const exitInspect = () => {
     setMode('walk');
     setSelectedArtwork(null);
@@ -65,7 +82,10 @@ export default function Experience({
     setCharacterTargetX(0);
   };
 
-  // Watch for the moment when gallery & character are both in place
+  // ─────────────────────────────────────────────────────────────────────────
+  // Watch for approach completion
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (mode !== 'approach' || !selectedArtwork) return;
 
@@ -75,7 +95,6 @@ export default function Experience({
       const g = galleryOffsetRef.current;
       const targetOffset = inspectTargetOffsetRef.current;
       const galleryCentered = Math.abs(g - targetOffset) < CENTER_EPS;
-
       const charX = characterXRef.current;
       const charInPlace = Math.abs(charX - CHARACTER_LEFT_X) < CHAR_EPS;
 
@@ -92,36 +111,37 @@ export default function Experience({
     return () => cancelAnimationFrame(id);
   }, [mode, selectedArtwork]);
 
-  /**
-   * Tell App which artwork is active for the overlay.
-   * We only send data when we are *fully* in INSPECT mode.
-   */
+  // ─────────────────────────────────────────────────────────────────────────
+  // Notify parent of artwork changes
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (typeof onArtworkChange !== 'function') return;
 
     if (mode === 'inspect' && selectedArtwork) {
-      // 🔹 CHANGED: send the full artwork object, including detailMedia
       onArtworkChange(selectedArtwork);
     } else {
       onArtworkChange(null);
     }
   }, [mode, selectedArtwork, onArtworkChange]);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <>
-      {/* LIGHTING */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          LIGHTING
+          ═══════════════════════════════════════════════════════════════════ */}
       <ambientLight intensity={0.5} />
-      <hemisphereLight
-        skyColor={'#dfeaff'}
-        groundColor={'#777777'}
-        intensity={0.6}
-      />
+      <hemisphereLight skyColor="#dfeaff" groundColor="#777777" intensity={0.6} />
 
       <directionalLight
         castShadow
         position={[8, 12, 6]}
         intensity={isLowPower ? 3.2 : 3.8}
-        color={'#fff9f0'}
+        color="#fff9f0"
         shadow-mapSize-width={isLowPower ? 1024 : 2048}
         shadow-mapSize-height={isLowPower ? 1024 : 2048}
         shadow-camera-near={1}
@@ -133,17 +153,17 @@ export default function Experience({
         shadow-bias={-0.0005}
       />
 
-      {/* Shadow plane */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.02, 0]}
-        receiveShadow
-      >
+      {/* ═══════════════════════════════════════════════════════════════════
+          SHADOW PLANE
+          ═══════════════════════════════════════════════════════════════════ */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
         <planeGeometry args={[200, 50]} />
         <shadowMaterial transparent opacity={0.18} />
       </mesh>
 
-      {/* Character */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          CHARACTER
+          ═══════════════════════════════════════════════════════════════════ */}
       <Character
         targetX={characterTargetX}
         galleryOffsetRef={galleryOffsetRef}
@@ -151,7 +171,9 @@ export default function Experience({
         lowPower={isLowPower}
       />
 
-      {/* Gallery */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          GALLERY
+          ═══════════════════════════════════════════════════════════════════ */}
       <Gallery
         scroll={scroll}
         galleryOffsetRef={galleryOffsetRef}
@@ -161,25 +183,22 @@ export default function Experience({
           scrollToOffset(targetOffset);
         }}
         onSelectArtwork={(art) => {
-          // If we're already inspecting THIS artwork, clicking it exits inspect
-          if (
-            mode === 'inspect' &&
-            selectedArtwork &&
-            selectedArtwork.id === art.id
-          ) {
+          // Toggle off if clicking same artwork while inspecting
+          if (mode === 'inspect' && selectedArtwork && selectedArtwork.id === art.id) {
             exitInspect();
             return;
           }
 
-          // Normal behaviour: start approaching the clicked artwork
+          // Start approach
           setSelectedArtwork(art);
           setMode('approach');
-          // Character heads to fixed left position (screen-space)
           setCharacterTargetX(CHARACTER_LEFT_X);
         }}
       />
 
-      {/* Camera controller */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          CAMERA
+          ═══════════════════════════════════════════════════════════════════ */}
       <CameraRig
         scroll={scroll}
         mode={mode}

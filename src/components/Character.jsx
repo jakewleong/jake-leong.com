@@ -4,42 +4,31 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 
+// ============================================================================
+// CHARACTER MODELS
+// ============================================================================
+
 const CHARACTER_MODELS = [
-  '/models/jake01.glb',
-  '/models/jake02.glb',
-  // add more here later, e.g. '/models/jake03.glb',
+  '/models/jake01.opt.glb',
+  '/models/jake02.opt.glb',
 ];
 
-/* ------------- TUNING KNOBS ------------- */
+// ============================================================================
+// TUNING CONSTANTS (baseline at ~60fps)
+// ============================================================================
 
-// Baseline factors at ~60fps. They get scaled by delta inside useFrame.
-
-// How fast the character moves toward targetX
 const POSITION_LERP = 0.08;
-
-// How fast we smooth the scroll velocity
 const VELOCITY_SMOOTH = 0.15;
-
-// Scroll sensitivity for switching animations
 const MOVING_THRESHOLD = 0.0002;
 const STILL_THRESHOLD = 0.0002;
-
-// How long the gallery must be basically still before we force idle (seconds)
 const STILL_TIME_REQUIRED = 0.12;
-
-// How fast the character rotates toward facing direction
 const ROTATION_LERP = 0.12;
-
-// Crossfade speed between idle/walk animations (seconds)
 const ANIM_FADE_DURATION = 0.4;
 
-/**
- * Props:
- *  - targetX: where along X the character should walk to
- *  - galleryOffsetRef: smoothed scroll offset (to drive walk/idle)
- *  - positionRef: optional ref to expose current x position
- *  - lowPower: optional boolean to tweak smoothing in low-power mode
- */
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
 export default function Character({
   targetX = 0,
   galleryOffsetRef,
@@ -48,7 +37,7 @@ export default function Character({
 }) {
   const group = useRef();
 
-  // 🔀 Pick a random character model once per mount
+  // Pick a random character model once per mount
   const [modelPath] = useState(() => {
     const index = Math.floor(Math.random() * CHARACTER_MODELS.length);
     return CHARACTER_MODELS[index];
@@ -57,7 +46,21 @@ export default function Character({
   const { scene, animations } = useGLTF(modelPath);
   const { actions, names } = useAnimations(animations, group);
 
-  // Ensure all meshes cast shadows
+  // Refs for animation state
+  const idleNameRef = useRef(null);
+  const walkNameRef = useRef(null);
+  const currentAction = useRef(null);
+
+  // Refs for movement tracking
+  const prevOffset = useRef(0);
+  const velRef = useRef(0);
+  const facingRef = useRef(1);
+  const stillTimeRef = useRef(0);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Enable shadows on all meshes
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!scene) return;
     scene.traverse((obj) => {
@@ -68,20 +71,14 @@ export default function Character({
     });
   }, [scene]);
 
-  const idleNameRef = useRef(null);
-  const walkNameRef = useRef(null);
-  const currentAction = useRef(null);
+  // ─────────────────────────────────────────────────────────────────────────
+  // Animation crossfade helper
+  // ─────────────────────────────────────────────────────────────────────────
 
-  const prevOffset = useRef(0);
-  const velRef = useRef(0);
-  const facingRef = useRef(1);
-  const stillTimeRef = useRef(0); // how long we've effectively been still
-
-  /** Smoothly crossfade between animations */
   const fadeToAction = (name, duration = ANIM_FADE_DURATION) => {
     if (!actions || !actions[name]) return;
-    const newAction = actions[name];
 
+    const newAction = actions[name];
     if (currentAction.current === newAction) return;
 
     const prev = currentAction.current;
@@ -95,15 +92,17 @@ export default function Character({
     }
   };
 
-  // Pick animation clips and start idle right away
+  // ─────────────────────────────────────────────────────────────────────────
+  // Initialize animations
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!names || names.length === 0) {
       console.warn('No animation clips found in', modelPath);
       return;
     }
 
-    const idleName =
-      names.find((n) => n.toLowerCase().includes('idle')) || names[0];
+    const idleName = names.find((n) => n.toLowerCase().includes('idle')) || names[0];
     const walkName =
       names.find((n) => n.toLowerCase().includes('walk')) ||
       names.find((n) => n !== idleName) ||
@@ -112,13 +111,17 @@ export default function Character({
     idleNameRef.current = idleName;
     walkNameRef.current = walkName;
 
-    // Start immediately in idle to prevent T-pose flash
+    // Start in idle to prevent T-pose flash
     const idleAction = actions[idleName];
     if (idleAction) {
       idleAction.reset().play();
       currentAction.current = idleAction;
     }
   }, [actions, names, modelPath]);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Frame loop: position, velocity, animation, rotation
+  // ─────────────────────────────────────────────────────────────────────────
 
   useFrame((_, delta) => {
     if (!group.current) return;
@@ -127,67 +130,70 @@ export default function Character({
     const walkName = walkNameRef.current;
     if (!idleName || !walkName) return;
 
-    // Normalise behaviour to ~60fps
-    const frameScale = Math.min(delta * 60, 2); // clamp to avoid jumps
+    const frameScale = Math.min(delta * 60, 2);
 
-    // 1️⃣ Move smoothly toward targetX (delta-based)
+    // 1. Move toward targetX
     const x = group.current.position.x;
     const posLerp = Math.min(POSITION_LERP * frameScale, 1);
     const newX = THREE.MathUtils.lerp(x, targetX, posLerp);
     group.current.position.x = newX;
     if (positionRef) positionRef.current = newX;
 
-    // 2️⃣ Track gallery velocity to decide animation
+    // 2. Track gallery velocity
     const offset = galleryOffsetRef?.current ?? 0;
     const rawVel = offset - prevOffset.current;
     prevOffset.current = offset;
 
-    // In low power, let velocity settle faster so we don't "walk forever"
     const velSmoothFactor = lowPower ? VELOCITY_SMOOTH * 1.8 : VELOCITY_SMOOTH;
     const velLerp = Math.min(velSmoothFactor * frameScale, 1);
     velRef.current = THREE.MathUtils.lerp(velRef.current, rawVel, velLerp);
     const speed = Math.abs(velRef.current);
 
-    // Track how long we've effectively been still
+    // Track stillness duration
     if (speed < STILL_THRESHOLD) {
       stillTimeRef.current += delta;
     } else {
       stillTimeRef.current = 0;
     }
 
-    // Determine if we *should* be walking
+    // 3. Determine movement state
     let isMoving;
     if (speed > MOVING_THRESHOLD) {
       isMoving = true;
     } else if (stillTimeRef.current > STILL_TIME_REQUIRED) {
-      // We've been still long enough → force idle
       isMoving = false;
     } else {
-      // In-between zone: keep whatever we're currently doing
       isMoving = currentAction.current === actions[walkName];
     }
 
-    // Update facing direction when there's noticeable movement
+    // Update facing direction
     if (speed > STILL_THRESHOLD) {
       facingRef.current = velRef.current > 0 ? 1 : -1;
     }
 
-    // 3️⃣ Blend animations smoothly
-    if (isMoving) fadeToAction(walkName);
-    else fadeToAction(idleName);
+    // 4. Blend animations
+    if (isMoving) {
+      fadeToAction(walkName);
+    } else {
+      fadeToAction(idleName);
+    }
 
-    // 4️⃣ Smooth rotation (delta-based)
+    // 5. Smooth rotation
     const yawRight = -Math.PI / 2;
     const yawLeft = Math.PI / 2;
     const desiredYaw = facingRef.current === 1 ? yawRight : yawLeft;
-
     const rotLerp = Math.min(ROTATION_LERP * frameScale, 1);
+
     group.current.rotation.y = THREE.MathUtils.lerp(
       group.current.rotation.y,
       desiredYaw,
       rotLerp
     );
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <group ref={group} position={[0, 0, 0]}>
@@ -202,7 +208,10 @@ export default function Character({
   );
 }
 
-// Preload all possible Jake variants
+// ============================================================================
+// PRELOAD
+// ============================================================================
+
 CHARACTER_MODELS.forEach((path) => {
   useGLTF.preload(path);
 });

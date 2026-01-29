@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "index.html",
+    "vite.config.*",
+    "src/main.{js,jsx,ts,tsx}",
+    "scripts/**/*.mjs"
+  ],
+  "project": [
+    "src/**/*.{js,jsx,ts,tsx}"
+  ],
+  "ignore": [
+    "**/*.d.ts",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*.stories.*"
+  ],
+  "ignoreDependencies": [
+    "@types/*"
+  ]
+}
