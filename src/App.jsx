@@ -836,12 +836,61 @@ export default function App() {
       {/* DESKTOP ARROW CONTROLS */}
       {!isMobile && !showLoader && !overlayIsOpen && !mediaOverlayOpen && (
         <>
-          <button type="button" onMouseDown={() => setMoveDir(-1)} onMouseUp={() => setMoveDir(0)} onMouseLeave={() => setMoveDir(0)}
-            style={{ position: 'absolute', top: '50%', left: 24, transform: 'translateY(-50%)', zIndex: 25, width: 40, height: 40, borderRadius: 999, border: 'none', background: 'rgba(0,0,0,0.75)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 22 }}
-            aria-label="Walk left">‹</button>
-          <button type="button" onMouseDown={() => setMoveDir(1)} onMouseUp={() => setMoveDir(0)} onMouseLeave={() => setMoveDir(0)}
-            style={{ position: 'absolute', top: '50%', right: 24, transform: 'translateY(-50%)', zIndex: 25, width: 40, height: 40, borderRadius: 999, border: 'none', background: 'rgba(0,0,0,0.75)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 22 }}
-            aria-label="Walk right">›</button>
+          {/* Left arrow - hidden at start */}
+          {scrollContainer && scrollContainer.scrollTop > 10 && (
+            <button
+              type="button"
+              onMouseDown={() => setMoveDir(-1)}
+              onMouseUp={() => setMoveDir(0)}
+              onMouseLeave={() => setMoveDir(0)}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 32,
+                transform: 'translateY(-50%)',
+                zIndex: 25,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 12,
+                fontSize: 56,
+                fontWeight: 300,
+                color: '#000',
+                lineHeight: 1,
+              }}
+              aria-label="Walk left"
+            >
+              ‹
+            </button>
+          )}
+
+          {/* Right arrow - hidden at end */}
+          {scrollContainer && scrollContainer.scrollTop < scrollContainer.scrollHeight - scrollContainer.clientHeight - 10 && (
+            <button
+              type="button"
+              onMouseDown={() => setMoveDir(1)}
+              onMouseUp={() => setMoveDir(0)}
+              onMouseLeave={() => setMoveDir(0)}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: 32,
+                transform: 'translateY(-50%)',
+                zIndex: 25,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 12,
+                fontSize: 56,
+                fontWeight: 300,
+                color: '#000',
+                lineHeight: 1,
+              }}
+              aria-label="Walk right"
+            >
+              ›
+            </button>
+          )}
         </>
       )}
 
@@ -906,6 +955,7 @@ export default function App() {
               onArtworkChange={handleArtworkChange}
               autoFocusFirst={false}
               isLowPower={isLowPower}
+              isMobile={isMobile}
               onScrollContainerReady={setScrollContainer}
             />
           </Suspense>

@@ -21,6 +21,7 @@ export default function Experience({
   onArtworkChange,
   autoFocusFirst = false,
   isLowPower = false,
+  isMobile,
   onScrollContainerReady,
 }) {
   const scroll = useScroll();
@@ -32,6 +33,8 @@ export default function Experience({
   const [mode, setMode] = useState('walk'); // 'walk' | 'approach' | 'inspect'
   const [selectedArtwork, setSelectedArtwork] = useState(null);
   const [characterTargetX, setCharacterTargetX] = useState(0);
+  const shadowSize = isMobile ? 512 : isLowPower ? 1024 : 2048;
+
 
   // ─────────────────────────────────────────────────────────────────────────
   // Refs
@@ -142,8 +145,7 @@ export default function Experience({
         position={[8, 12, 6]}
         intensity={isLowPower ? 3.2 : 3.8}
         color="#fff9f0"
-        shadow-mapSize-width={isLowPower ? 1024 : 2048}
-        shadow-mapSize-height={isLowPower ? 1024 : 2048}
+        shadow-mapSize={[shadowSize, shadowSize]}
         shadow-camera-near={1}
         shadow-camera-far={60}
         shadow-camera-left={-40}
