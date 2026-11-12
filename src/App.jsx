@@ -307,12 +307,12 @@ function MediaCarouselOverlay({ items, index, setIndex, onClose }) {
 function AssetWarmup({ onReady }) {
   useGLTF('/models/gallery_base.opt.glb');
   useGLTF('/models/art/title.opt.glb');
-  useGLTF('/models/art/self.opt.glb');
-  useGLTF('/models/art/mowalola.opt.glb');
-  useGLTF('/models/art/distortedRealities01.opt.glb');
+  useGLTF('/models/art/ElijahAikeNeymar.opt.glb');
+  useGLTF('/models/art/ElijahAikeLondonBridge.opt.glb');
+  useGLTF('/models/art/ElijahSlowlyDrifting.opt.glb');
   useGLTF('/models/art/Cas-NYC.opt.glb');
-  useGLTF('/models/art/whiterobe.opt.glb');
-  useGLTF('/models/art/Labrum_Nomoli.opt.glb');
+  useGLTF('/models/art/distortedRealities01.opt.glb');
+  useGLTF('/models/art/self.opt.glb');
   useGLTF('/models/art/wip.opt.glb');
   useGLTF('/models/jake01.opt.glb');
   useGLTF('/models/jake02.opt.glb');
@@ -405,14 +405,19 @@ export default function App() {
 
   useEffect(() => {
     if (!isMobile || progress !== 100) return;
+    
+  useGLTF.preload('/models/gallery_base.opt.glb');
+  useGLTF.preload('/models/art/title.opt.glb');
+  useGLTF.preload('/models/art/ElijahAikeNeymar.opt.glb');
+  useGLTF.preload('/models/art/ElijahAikeLondonBridge.opt.glb');
+  useGLTF.preload('/models/art/ElijahSlowlyDrifting.opt.glb');
+  useGLTF.preload('/models/art/Cas-NYC.opt.glb');
+  useGLTF.preload('/models/art/distortedRealities01.opt.glb');
+  useGLTF.preload('/models/art/self.opt.glb');
+  useGLTF.preload('/models/art/wip.opt.glb');
+  useGLTF.preload('/models/jake01.opt.glb');
+  useGLTF.preload('/models/jake02.opt.glb');
 
-    useGLTF.preload('/models/gallery_base.opt.glb');
-    useGLTF.preload('/models/art/title.opt.glb');
-    useGLTF.preload('/models/art/self.opt.glb');
-    useGLTF.preload('/models/art/mowalola.opt.glb');
-    useGLTF.preload('/models/art/distortedRealities01.opt.glb');
-    useGLTF.preload('/models/jake01.opt.glb');
-    useGLTF.preload('/models/jake02.opt.glb');
   }, [isMobile, progress]);
 
   // ─────────────────────────────────────────────────────────────────────────
